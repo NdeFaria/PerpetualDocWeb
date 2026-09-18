@@ -9,7 +9,10 @@
    nada pra fora deste navegador.
    ========================================================================= */
 
-const PREFIXO = "/__pd_docs__/";
+// Calculado a partir de onde o próprio sw.js está, pra bater exatamente com o
+// que o index.html calcula — funciona em qualquer subcaminho (raiz, Netlify,
+// projeto do GitHub Pages, etc.), desde que os dois arquivos fiquem juntos.
+const PREFIXO = self.location.pathname.replace(/[^/]*$/, "") + "__pd_docs__/";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

@@ -72,9 +72,8 @@
   .pd-brand{ display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
   .pd-brand-mark{
     width:26px;height:26px;border-radius:7px;
+    flex-shrink:0; object-fit:cover; display:block;
     background:linear-gradient(135deg,var(--accent),var(--accent-strong));
-    display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:13px;color:#1a1206;flex-shrink:0;
   }
   .pd-brand-name{ font-weight:600; font-size:14.5px; letter-spacing:.2px; }
   .pd-brand-sub{ color:var(--text-faint); font-size:12px; margin-left:8px; font-family:var(--mono); }
@@ -242,7 +241,7 @@
 
   <div class="pd-topline">
     <div class="pd-brand" id="pd-brand">
-      <div class="pd-brand-mark">PD</div>
+      <img class="pd-brand-mark" src="favicon.ico" alt="PerpetualDoc" />
       <div class="pd-brand-name">PerpetualDoc</div>
       <div class="pd-brand-sub" id="pd-folder-label"></div>
     </div>
@@ -339,7 +338,10 @@ let docItems = [];           // { title, relFolder, indexPath, normText, normTit
 let currentQuery = "";
 let activeResultIndex = -1;
 let currentPath = null;
-const PREFIXO_URL = "/__pd_docs__/";
+// Calculado a partir de onde este próprio arquivo está sendo servido, então
+// funciona em qualquer subcaminho (raiz do domínio, Netlify, ou um projeto do
+// GitHub Pages tipo usuario.github.io/NomeDoRepo/) — não fica preso à raiz.
+const PREFIXO_URL = location.pathname.replace(/[^/]*$/, "") + "__pd_docs__/";
 
 const supportsFSAccess = typeof window.showDirectoryPicker === "function";
 
