@@ -259,15 +259,14 @@
   </div>
 
   <!-- HOME / SPOTLIGHT -->
-  <div id="view-home">
-
-    <!-- connect state -->
-    <div class="pd-connect" id="pd-connect" style="display:none;">
-      <div id="pd-connect-body"></div>
-    </div>
+  <div id="view-home">  
 
     <!-- ready / search state -->
     <div id="pd-search-area" style="display:none; width:100%; display:flex; flex-direction:column; align-items:center;">
+	  <!-- connect state -->
+	  <div class="pd-connect" id="pd-connect" style="display:none;">
+	    <div id="pd-connect-body"></div>
+	  </div>
       <div class="pd-hero">
         <h1>Buscar na documentação</h1>
         <p>Digite um nome de classe, método ou qualquer palavra do conteúdo. Os resultados aparecem conforme você digita.</p>
@@ -283,9 +282,6 @@
       <div class="pd-footnote">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
         <span id="pd-index-status">Tudo roda localmente no seu navegador. Nenhum arquivo é enviado para a internet.</span>
-      </div>
-      <div class="pd-footnote pd-footnote-link">
-        Código aberto pra conferir: <a href="https://github.com/NdeFaria/PerpetualDocWeb" target="_blank" rel="noopener noreferrer">github.com/NdeFaria/PerpetualDocWeb</a>
       </div>
     </div>
 
