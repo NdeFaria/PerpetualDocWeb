@@ -339,7 +339,8 @@ const DB_STORE = "handles";
 const DB_STORE_CACHE = "textcache";
 const DB_KEY = "docsFolder";
 const THEME_KEY = "perpetualdoc.theme";
-const IGNORED_DIRS = new Set([".git", "__pycache__", "node_modules", ".vscode", ".idea"]);
+const IGNORED_DIRS = new Set([".git", ".svn", "__pycache__", "node_modules", ".vscode", ".idea"]);
+const NOME_JSON_INDICE = "_perpetualdoc_index.json";
 const CONCORRENCIA_LEITURA = 16;
 
 let rootHandle = null;
@@ -569,10 +570,46 @@ async function comConcorrencia(items, limite, worker){
   await Promise.all(executores);
 }
 
+/**
+ * Se existir um _perpetualdoc_index.json na raiz da pasta conectada (gerado
+ * por um script à parte, rodado fora do navegador), usa ele em vez de ler e
+ * processar cada HTML na hora — muito mais rápido quando há muitas
+ * documentações. Só aceita entradas cujo arquivo ainda existe de verdade na
+ * pasta conectada; se o JSON não existir ou estiver inválido, devolve null e
+ * o site cai de volta pra varredura normal, sem quebrar nada.
+ */
+async function tentarCarregarIndiceJson(){
+  const fh = fileMap.get(NOME_JSON_INDICE);
+  if (!fh) return null;
+  try {
+    const file = await fh.getFile();
+    const texto = await file.text(); // JSON é sempre UTF-8, não precisa da cascata de encoding
+    const dados = JSON.parse(texto);
+    if (!dados || !Array.isArray(dados.documentos)) return null;
+    const validos = dados.documentos.filter(d =>
+      d && typeof d.indexPath === "string" && fileMap.has(d.indexPath) &&
+      typeof d.normText === "string" && typeof d.title === "string"
+    );
+    return validos.length ? validos : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+let usouIndiceJson = false;
+
 async function construirIndice(onProgress){
   fileMap = new Map();
   const docFolders = [];
   await varrerPasta(rootHandle, "", docFolders, true);
+
+  const doIndiceJson = await tentarCarregarIndiceJson();
+  usouIndiceJson = !!doIndiceJson;
+  if (doIndiceJson){
+    docItems = doIndiceJson;
+    if (onProgress) onProgress(docItems.length, docItems.length);
+    return docItems.length;
+  }
 
   const todosHtmlPaths = [...fileMap.keys()].filter(p => /\.html?$/i.test(p));
   const cachePersistido = await loadTextCache();
@@ -1184,7 +1221,7 @@ async function indexarERenderizar(){
     document.getElementById("pd-connect").style.display = "none";
     document.getElementById("pd-search-area").style.display = "flex";
     document.getElementById("pd-index-status").textContent =
-      total + " documentação(ões) indexada(s). Busca sem acento, por nome e conteúdo. Nada sai deste navegador.";
+      total + " documentação(ões) indexada(s)" + (usouIndiceJson ? " (via índice pré-gerado)" : "") + ". Busca sem acento, por nome e conteúdo. Nada sai deste navegador.";
     atualizarPillPasta();
     document.getElementById("pd-search-input").value = "";
     executarBusca("");
