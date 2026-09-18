@@ -882,6 +882,14 @@ function injetarTemaEscuro(html){
  *   pra poder inserir o <style> com segurança) e devolvido como utf-8 com o
  *   CSS extra. Nenhum outro tipo de arquivo é afetado pelo tema.
  */
+/* Tipos de arquivo tratados como texto: corrige o encoding (a mesma cascata
+   usada em todo o app) e reemite como UTF-8. Sem isso, arquivos de dados que
+   a própria documentação carrega via JavaScript — como o índice da busca
+   nativa do PasDoc (Tipue Search) — vinham com bytes crus, e como não têm um
+   <meta charset> próprio pro navegador detectar (diferente do HTML), viravam
+   acento quebrado. Arquivos binários (imagem, fonte) continuam intocados. */
+const TIPOS_TEXTO = new Set(["text/html", "application/javascript", "text/css", "application/json", "text/plain", "application/xml"]);
+
 async function responderRequisicaoArquivo(relPath){
   const fh = fileMap.get(relPath);
   if (!fh) return { ok: false, status: 404, mensagem: "Arquivo não encontrado na pasta conectada: " + relPath };
@@ -892,12 +900,14 @@ async function responderRequisicaoArquivo(relPath){
 
   const tipo = mimeFor(relPath);
 
-  if (tipo === "text/html" && temaAtual() === "dark"){
-    let html;
-    try { html = await lerComoTexto(file); }
+  if (TIPOS_TEXTO.has(tipo)){
+    let texto;
+    try { texto = await lerComoTexto(file); }
     catch(e){ return { ok: false, status: 500, mensagem: "Erro ao ler o arquivo." }; }
-    html = injetarTemaEscuro(html);
-    return { ok: true, tipo: "text/html; charset=utf-8", texto: html };
+    if (tipo === "text/html" && temaAtual() === "dark"){
+      texto = injetarTemaEscuro(texto);
+    }
+    return { ok: true, tipo: tipo + "; charset=utf-8", texto };
   }
 
   let buffer;
@@ -935,6 +945,14 @@ if ("serviceWorker" in navigator){
 
 /* ---------------------------- Abrir documentos ---------------------------- */
 
+// Pilha própria de navegação, restrita à documentação atualmente aberta — não
+// usamos o histórico nativo do navegador pro botão "voltar" porque a navegação
+// de um iframe entra no histórico conjunto da aba inteira, e voltar demais
+// podia sair do site ou cair numa página em branco.
+let navStack = [];
+let navIndex = -1;
+let suprimirProximoRegistro = false;
+
 function caminhoParaUrl(relPath){
   return PREFIXO_URL + relPath.split("/").map(encodeURIComponent).join("/");
 }
@@ -944,6 +962,8 @@ function abrirDocumento(relPath){
     alert("Não foi possível localizar este arquivo na pasta conectada:\n" + relPath);
     return;
   }
+  navStack = [];
+  navIndex = -1;
   mostrarViewDoc();
   document.getElementById("pd-frame").src = caminhoParaUrl(relPath);
 }
@@ -973,12 +993,16 @@ function mostrarViewHome(){
   document.getElementById("pd-frame").src = "about:blank";
   limparMarcas();
   currentPath = null;
+  navStack = [];
+  navIndex = -1;
   document.getElementById("pd-search-input").focus();
 }
 
 // Sincroniza breadcrumb sempre que o iframe navega — seja pela abertura inicial,
-// seja por um link interno clicado dentro da própria documentação (que agora
-// navega do jeito normal, nativo, sem nenhuma interceptação).
+// seja por um link interno clicado dentro da própria documentação (que navega
+// do jeito normal, nativo, sem nenhuma interceptação) — e registra a página na
+// nossa própria pilha, a menos que essa navegação seja resultado do botão
+// "voltar" (que já sabe pra onde está indo e não deve registrar de novo).
 document.getElementById("pd-frame").addEventListener("load", () => {
   const frame = document.getElementById("pd-frame");
   let caminho;
@@ -989,8 +1013,17 @@ document.getElementById("pd-frame").addEventListener("load", () => {
   const relPath = decodeURIComponent(caminho.slice(PREFIXO_URL.length));
   if (!fileMap.has(relPath)) return;
 
+  if (suprimirProximoRegistro){
+    suprimirProximoRegistro = false;
+  } else {
+    navStack = navStack.slice(0, navIndex + 1);
+    navStack.push(relPath);
+    navIndex = navStack.length - 1;
+  }
+
   currentPath = relPath;
   atualizarBreadcrumb(relPath);
+  document.getElementById("pd-btn-back").style.visibility = navIndex > 0 ? "visible" : "hidden";
   limparMarcas();
   document.getElementById("pd-inpage-search").value = "";
   document.getElementById("pd-inpage-count").textContent = "";
@@ -1288,8 +1321,10 @@ document.getElementById("pd-brand").addEventListener("click", () => {
 });
 
 document.getElementById("pd-btn-back").addEventListener("click", () => {
-  const frame = document.getElementById("pd-frame");
-  try { frame.contentWindow.history.back(); } catch(e){ /* sem historico, ignora */ }
+  if (navIndex <= 0) return;
+  navIndex--;
+  suprimirProximoRegistro = true;
+  document.getElementById("pd-frame").src = caminhoParaUrl(navStack[navIndex]);
 });
 
 let debounceTimer = null;
