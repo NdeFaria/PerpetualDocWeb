@@ -519,20 +519,39 @@ function isExternal(ref){
 
 /* ---------------------------- Varredura da pasta ---------------------------- */
 
-async function varrerPasta(dirHandle, relPath, docFolders){
+async function varrerPasta(dirHandle, relPath, docFolders, ehRaiz){
+  // Lista as entradas passo a passo (em vez de "for await" direto), pra que um
+  // item problemático no meio da lista (arquivo temporário que sumiu, link
+  // quebrado, algo sendo regravado na hora) não derrube a pasta inteira. Se a
+  // pasta RAIZ em si estiver inacessível, o erro continua aparecendo de verdade.
   const entries = [];
-  for await (const entry of dirHandle.values()) entries.push(entry);
+  const iterador = dirHandle.values();
+  while (true){
+    let passo;
+    try { passo = await iterador.next(); }
+    catch(e) {
+      if (ehRaiz) throw e;
+      break; // pasta aninhada com problema: para aqui, mantém o que já leu
+    }
+    if (passo.done) break;
+    entries.push(passo.value);
+  }
   entries.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   let temIndex = false;
   for (const handle of entries){
     const childRel = relPath ? relPath + "/" + handle.name : handle.name;
-    if (handle.kind === "file"){
-      fileMap.set(childRel, handle);
-      if (handle.name.toLowerCase() === "index.html") temIndex = true;
-    } else if (handle.kind === "directory"){
-      if (IGNORED_DIRS.has(handle.name.toLowerCase())) continue;
-      await varrerPasta(handle, childRel, docFolders);
+    try {
+      if (handle.kind === "file"){
+        fileMap.set(childRel, handle);
+        if (handle.name.toLowerCase() === "index.html") temIndex = true;
+      } else if (handle.kind === "directory"){
+        if (IGNORED_DIRS.has(handle.name.toLowerCase())) continue;
+        await varrerPasta(handle, childRel, docFolders, false);
+      }
+    } catch(e) {
+      // esta entrada específica ficou inacessível durante a varredura — pula e segue com o resto
+      continue;
     }
   }
   if (temIndex) docFolders.push(relPath);
@@ -553,7 +572,7 @@ async function comConcorrencia(items, limite, worker){
 async function construirIndice(onProgress){
   fileMap = new Map();
   const docFolders = [];
-  await varrerPasta(rootHandle, "", docFolders);
+  await varrerPasta(rootHandle, "", docFolders, true);
 
   const todosHtmlPaths = [...fileMap.keys()].filter(p => /\.html?$/i.test(p));
   const cachePersistido = await loadTextCache();
