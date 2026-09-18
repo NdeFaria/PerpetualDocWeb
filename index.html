@@ -160,13 +160,10 @@
   .pd-empty-state{ padding:26px 20px; color:var(--text-faint); font-size:13.5px; text-align:center; }
 
   .pd-footnote{
-    margin-top:22px; font-size:12px; color:var(--text-faint);
+    margin-top:14px; margin-bottom:22px; font-size:12px; color:var(--text-faint);
     display:flex; align-items:center; gap:7px;
   }
   .pd-footnote svg{ width:13px;height:13px; }
-  .pd-footnote-link{ margin-top:8px; }
-  .pd-footnote-link a{ color:var(--text-faint); text-decoration:underline; text-underline-offset:2px; }
-  .pd-footnote-link a:hover{ color:var(--text-dim); }
 
   /* ---------- connect screen ---------- */
   .pd-connect{
@@ -272,6 +269,10 @@
         <h1>Buscar na documentação</h1>
         <p>Digite um nome de classe, método ou qualquer palavra do conteúdo. Os resultados aparecem conforme você digita.</p>
       </div>
+      <div class="pd-footnote">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+        <span id="pd-index-status">Tudo roda localmente no seu navegador. Nenhum arquivo é enviado para a internet.</span>
+      </div>
       <div class="pd-search-shell">
         <div class="pd-search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -279,10 +280,6 @@
           <span class="pd-kbd">Ctrl K</span>
         </div>
         <div class="pd-results" id="pd-results" style="display:none;"></div>
-      </div>
-      <div class="pd-footnote">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-        <span id="pd-index-status">Tudo roda localmente no seu navegador. Nenhum arquivo é enviado para a internet.</span>
       </div>
     </div>
 
