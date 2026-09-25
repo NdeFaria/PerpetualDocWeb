@@ -42,6 +42,26 @@ Da próxima vez que abrir o site no mesmo navegador, ele lembra da pasta — só
 4. Use **Buscar nesta página** pra procurar um termo dentro da documentação aberta.
 5. O ícone de sol/lua alterna entre o visual original (claro) e um tema escuro aplicado por cima (opcional).
 6. Se a pasta de documentação for atualizada (nova branch, novos fontes), use o botão de reescanear ao lado de "Trocar pasta".
+7. Use **Editor TXT** (no topo) para escrever complementos de documentação em `.txt` com tags do PasDoc — veja abaixo.
+
+## Editor TXT (complementos via @include)
+
+O botão **Editor TXT** abre um editor de texto com botões que inserem as tags do PasDoc (`@bold`, `@italic`, `@code`, `@section`, `@link`, `@url`, listas, `@table`, `@longCode`, `@image`, `@param`, `@returns`…) e uma pré-visualização ao lado. O arquivo gerado é um `.txt` puro, pronto para ser referenciado no comentário de uma unit ou classe:
+
+```pascal
+{ @include(MinhaUnit.txt) }
+```
+
+- **Salvar** sobrescreve o arquivo aberto sem perguntar o local; se for um arquivo novo, pergunta onde gravar. **Salvar como…** sempre pergunta.
+- **Abrir…** (ou arrastar um `.txt` para o editor) carrega um arquivo existente para edição.
+- **Copiar @include** copia a linha `{ @include(<caminho completo>) }`. O navegador não revela caminhos do disco, então na primeira vez ele pergunta onde fica a pasta de documentação conectada (ou a pasta do arquivo, se ele estiver fora dela) e completa o resto sozinho. Se o arquivo ainda não foi salvo, ele oferece salvar na hora e já copia a linha.
+- Na pré-visualização, clicar num `@link` abre a página correspondente da documentação em outra aba; âncoras aparecem marcadas (na documentação final elas são invisíveis) e imagens encontradas na pasta conectada são exibidas.
+- A codificação é detectada ao abrir (ANSI/Windows-1252 ou UTF-8) e mantida ao salvar; para arquivos novos, o padrão é ANSI com quebra de linha CRLF, igual aos fontes Delphi. Dá para trocar na barra inferior.
+- O PasDoc não tem tag de cor: o botão de cor usa `@html(<span style="color:…">)`, que funciona na saída HTML.
+- Com a pasta de documentação conectada, a pré-visualização usa o `pasdoc.css` real e o `@link` sugere e confere nomes existentes.
+- Os avisos na barra inferior apontam parênteses sem fechar, tags desconhecidas (ex.: um `@` de e-mail — use `@@`) e tabelas com número de células diferente.
+
+Assim como o resto do site, o editor não envia nada para a internet: ele só lê e grava os arquivos que você escolher, e o rascunho fica no armazenamento local do navegador.
 
 ## Requisitos
 
