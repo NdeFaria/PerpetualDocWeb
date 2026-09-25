@@ -40,6 +40,7 @@ Da próxima vez que abrir o site no mesmo navegador, ele lembra da pasta — só
 2. Digite na busca do topo pra encontrar um projeto por nome, unit, classe ou conteúdo.
 3. Abra um resultado — a documentação aparece exatamente como o PasDoc gerou.
 4. Use **Buscar nesta página** pra procurar um termo dentro da documentação aberta.
+   Links externos da documentação sempre abrem em outra aba; links internos navegam dentro do visualizador e âncoras rolam até o ponto certo.
 5. O ícone de sol/lua alterna entre o visual original (claro) e um tema escuro aplicado por cima (opcional).
 6. Se a pasta de documentação for atualizada (nova branch, novos fontes), use o botão de reescanear ao lado de "Trocar pasta".
 7. Use **Editor TXT** (no topo) para escrever complementos de documentação em `.txt` com tags do PasDoc — veja abaixo.
@@ -59,6 +60,7 @@ O botão **Editor TXT** abre um editor de texto com botões que inserem as tags 
 - A codificação é detectada ao abrir (ANSI/Windows-1252 ou UTF-8) e mantida ao salvar; para arquivos novos, o padrão é ANSI com quebra de linha CRLF, igual aos fontes Delphi. Dá para trocar na barra inferior.
 - O PasDoc não tem tag de cor: o botão de cor usa `@html(<span style="color:…">)`, que funciona na saída HTML.
 - Com a pasta de documentação conectada, a pré-visualização usa o `pasdoc.css` real e o `@link` sugere e confere nomes existentes.
+- `@url` precisa do `https://`: sem ele o PasDoc gera um link relativo que não abre o site. O botão de link externo completa isso sozinho, e a barra de avisos aponta os que estiverem sem.
 - Os avisos na barra inferior apontam parênteses sem fechar, tags desconhecidas (ex.: um `@` de e-mail — use `@@`) e tabelas com número de células diferente.
 
 Assim como o resto do site, o editor não envia nada para a internet: ele só lê e grava os arquivos que você escolher, e o rascunho fica no armazenamento local do navegador.

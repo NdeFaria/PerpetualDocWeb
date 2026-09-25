@@ -1258,8 +1258,90 @@ function mostrarViewHome(){
 // do jeito normal, nativo, sem nenhuma interceptação) — e registra a página na
 // nossa própria pilha, a menos que essa navegação seja resultado do botão
 // "voltar" (que já sabe pra onde está indo e não deve registrar de novo).
+/* ---------------------------- Cliques em links dentro da documentação ----------------------------
+   Não altera nenhum arquivo: só decide o que fazer com o clique.
+   - Link externo (http, https, mailto…): sempre em outra aba, nunca dentro do visualizador.
+   - Link relativo que não existe na pasta mas é claramente um site (ex.: o
+     PasDoc gera href="www.google.com" para @url(www.google.com)): abre
+     https://www… em outra aba, em vez de cair em "arquivo não encontrado".
+   - Âncora da própria página: rola até ela (por id ou name).
+   - Link para outra página da documentação: navegação normal no visualizador. */
+const RE_PARECE_SITE = /^(www\.[^\s/]+|[a-z0-9-]+(\.[a-z0-9-]+)*\.(com|net|org|br|gov|edu|io|dev|app|info|biz|co|me|tech|cloud)(\.[a-z]{2})?)(\/|\?|#|$)/i;
+
+function caminhoRelDoDocumento(doc){
+  try {
+    const p = doc.location.pathname;
+    return p.startsWith(PREFIXO_URL) ? decodeURIComponent(p.slice(PREFIXO_URL.length)) : null;
+  } catch(e){ return null; }
+}
+
+function rolarAteAncora(doc, nome){
+  let alvo = nome;
+  try { alvo = decodeURIComponent(nome); } catch(e){ /* usa como veio */ }
+  if (!alvo) { doc.defaultView.scrollTo(0, 0); return true; }
+  const el = doc.getElementById(alvo) || doc.getElementsByName(alvo)[0] ||
+    [...doc.querySelectorAll("[id],a[name]")].find(x => (x.id || x.getAttribute("name") || "").toLowerCase() === alvo.toLowerCase());
+  if (!el) return false;
+  el.scrollIntoView({ block: "start" });
+  return true;
+}
+
+function abrirEmNovaAba(url){
+  const w = window.open(url, "_blank", "noopener");
+  if (w === null){ /* com noopener o retorno é sempre null; nada a fazer */ }
+}
+
+function tratarCliqueNaDocumentacao(e){
+  if (e.defaultPrevented || (e.type === "click" && e.button !== 0) || (e.type === "auxclick" && e.button !== 1)) return;
+  const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+  if (!a) return;
+  const bruto = (a.getAttribute("href") || "").trim();
+  if (!bruto || /^javascript:/i.test(bruto)) return;
+  const doc = a.ownerDocument;
+
+  if (/^(https?:|ftp:|mailto:|tel:)/i.test(bruto) || bruto.startsWith("//")){
+    e.preventDefault();
+    abrirEmNovaAba(a.href);
+    return;
+  }
+
+  let url;
+  try { url = new URL(bruto, doc.location.href); } catch(err){ return; }
+  if (url.origin !== location.origin || !url.pathname.startsWith(PREFIXO_URL)){
+    e.preventDefault();
+    abrirEmNovaAba(url.href);
+    return;
+  }
+
+  const rel = decodeURIComponent(url.pathname.slice(PREFIXO_URL.length));
+  if (fileMap.has(rel)){
+    // Âncora na mesma página: rola sem recarregar (funciona com id ou name).
+    if (url.hash && rel === caminhoRelDoDocumento(doc) && e.type === "click" && !e.ctrlKey && !e.metaKey && !e.shiftKey){
+      if (rolarAteAncora(doc, url.hash.slice(1))) e.preventDefault();
+    }
+    return; // página da documentação: navegação normal
+  }
+
+  if (RE_PARECE_SITE.test(bruto)){
+    e.preventDefault();
+    abrirEmNovaAba("https://" + bruto.replace(/^\/+/, ""));
+  }
+}
+
+function ligarCliquesNaDocumentacao(frame){
+  const docs = [];
+  try { coletarDocumentosAcessiveis(frame.contentWindow, docs); } catch(e){ return; }
+  docs.forEach((doc) => {
+    if (!doc || doc.__pdCliques) return;
+    doc.__pdCliques = true;
+    doc.addEventListener("click", tratarCliqueNaDocumentacao, true);
+    doc.addEventListener("auxclick", tratarCliqueNaDocumentacao, true);
+  });
+}
+
 document.getElementById("pd-frame").addEventListener("load", () => {
   const frame = document.getElementById("pd-frame");
+  ligarCliquesNaDocumentacao(frame);
   let caminho;
   try { caminho = frame.contentWindow.location.pathname; }
   catch(e){ return; }
@@ -1941,9 +2023,13 @@ function pdTag(s, t, ctx){
     case "url": {
       const { tok, resto } = pdToken(s, A, B);
       const texto = resto < B ? pdInline(s, resto, B, ctx).trim() : "";
-      const href = /^www\./i.test(tok) ? "http://" + tok : tok;
-      const seguro = /^(https?:|ftp:|mailto:|file:)/i.test(href);
-      return (seguro ? '<a href="' + edEsc(href) + '" target="_blank" rel="noopener">' : "<a>") + (texto || edEsc(tok)) + "</a>";
+      if (!tok){ pdDiag(ctx, t.ini, "@url() vazio"); return texto; }
+      if (/^(https?:|ftp:|mailto:|file:)/i.test(tok)){
+        return '<a href="' + edEsc(tok) + '" target="_blank" rel="noopener" title="' + edEsc(tok) + ' — abre em outra aba">' + (texto || edEsc(tok)) + "</a>";
+      }
+      // O PasDoc copia o endereço como está: sem protocolo vira link relativo (quebrado).
+      pdDiag(ctx, t.ini, "@url(" + tok + ") sem https:// — o PasDoc gera um link relativo que não abre o site. Use @url(https://" + tok.replace(/^\/+/, "") + " …)");
+      return '<a class="pd-lk nf" href="https://' + edEsc(tok.replace(/^\/+/, "")) + '" target="_blank" rel="noopener" title="Sem https:// — na documentação gerada este link vai quebrar">' + (texto || edEsc(tok)) + "</a>";
     }
     case "section": {
       const m = /^\s*(\d+)\s+(\S+)\s+/.exec(raw());
@@ -2337,17 +2423,24 @@ async function edResolverImagens(raiz){
 /** Clique num @link da prévia: âncora do próprio texto rola até ela; item da
  *  documentação conectada abre numa nova aba (servido pelo mesmo Service Worker). */
 function edCliqueNaPrevia(e){
-  const a = e.target.closest("a[data-link]");
+  if (e.type === "click" && e.button !== 0) return;
+  const a = e.target.closest ? e.target.closest("a[data-link], a[href]") : null;
   if (!a) return;
   e.preventDefault();
-  const ident = a.getAttribute("data-link");
   const doc = a.ownerDocument;
-  const local = doc.getElementById(ident) || [...doc.querySelectorAll("[id]")].find(el => el.id.toLowerCase() === ident.toLowerCase());
-  if (local){ local.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  if (!a.hasAttribute("data-link")){
+    const href = a.getAttribute("href") || "";
+    if (href.startsWith("#")){ if (!rolarAteAncora(doc, href.slice(1))) edToast("Âncora " + href.slice(1) + " não existe neste texto.", true); return; }
+    if (a.classList.contains("nf")) edToast("Atenção: sem https:// esse link vai quebrar na documentação gerada.", true);
+    abrirEmNovaAba(a.href);
+    return;
+  }
+  const ident = a.getAttribute("data-link");
+  if (rolarAteAncora(doc, ident)) return;
   if (!fileMap.size){ edToast("Conecte a pasta de documentação para abrir links de units e classes."); return; }
   const alvo = edResolverLink(ident);
   if (!alvo){ edToast(ident + " não foi encontrado na documentação conectada.", true); return; }
-  window.open(caminhoParaUrl(alvo.caminho) + (alvo.ancora ? "#" + encodeURIComponent(alvo.ancora) : ""), "_blank");
+  abrirEmNovaAba(new URL(caminhoParaUrl(alvo.caminho) + (alvo.ancora ? "#" + encodeURIComponent(alvo.ancora) : ""), location.href).href);
 }
 
 function edAtualizarAvisos(){
@@ -2891,13 +2984,14 @@ const ED_ACOES = {
   url: () => {
     edGuardarSelecao();
     const sel = edSelecao().texto.trim();
-    const pareceUrl = /^(https?:\/\/|www\.)/i.test(sel);
+    const pareceUrl = /^(https?:\/\/|www\.)/i.test(sel) || RE_PARECE_SITE.test(sel);
     edModal("Link externo",
       '<label class="campo">Endereço<input type="text" class="mono" id="f-url" value="' + edEsc(pareceUrl ? sel : "") + '" placeholder="https://…"></label>' +
       '<label class="campo">Texto exibido (opcional)<input type="text" id="f-texto" value="' + edEsc(pareceUrl ? "" : sel) + '"></label>',
       (m) => {
-        const u = m.querySelector("#f-url").value.trim().replace(/\s/g, "%20").replace(/\(/g, "%28").replace(/\)/g, "%29");
+        let u = m.querySelector("#f-url").value.trim().replace(/\s/g, "%20").replace(/\(/g, "%28").replace(/\)/g, "%29");
         if (!u){ m.querySelector("#f-url").focus(); return false; }
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u.replace(/^\/+/, ""); // sem protocolo o PasDoc gera link quebrado
         const tx = m.querySelector("#f-texto").value.trim();
         edRestaurarSelecao();
         edInserir("@url(" + u + (tx ? " " + edEscaparParens(tx) : "") + ")");
@@ -3233,6 +3327,7 @@ async function edIniciar(){
   ed.previewPronto = true;
   edAplicarCssPreview();
   frame.contentDocument.addEventListener("click", edCliqueNaPrevia);
+  frame.contentDocument.addEventListener("auxclick", edCliqueNaPrevia);
 
   // Recupera o rascunho e o arquivo da última sessão.
   let rasc = null;
