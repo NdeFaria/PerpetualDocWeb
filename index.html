@@ -230,6 +230,187 @@
 
   #pd-frame{ flex:1; border:0; background:#fff; width:100%; height:100%; }
 
+
+  /* ---------- editor TXT (PasDoc) ---------- */
+  .pd-btn-editor{ display:flex; align-items:center; gap:7px; }
+  .pd-btn-editor.on{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
+
+  #view-editor{ flex:1; display:none; flex-direction:column; min-height:0; }
+  #view-editor.active{ display:flex; }
+
+  .pd-edbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:10px 16px; border-bottom:1px solid var(--border-soft);
+    background:var(--bg-soft); flex-shrink:0;
+  }
+  .pd-ed-file{ display:flex; align-items:baseline; gap:8px; flex:1; min-width:160px; overflow:hidden; }
+  .pd-ed-dot{ width:8px; height:8px; border-radius:50%; background:var(--ok); flex-shrink:0; align-self:center; }
+  .pd-ed-dot.sujo{ background:var(--accent); }
+  .pd-ed-nome{ font-family:var(--mono); font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pd-ed-onde{ font-size:12px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pd-ed-grupo{ display:flex; align-items:center; gap:6px; }
+  .pd-edbar .pd-btn.primary{ background:var(--accent); border-color:var(--accent); color:#1a1206; font-weight:600; }
+  .pd-edbar .pd-btn.primary:hover{ background:var(--accent-strong); border-color:var(--accent-strong); }
+
+  .pd-seg{ display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--panel); }
+  .pd-seg button{
+    border:0; background:transparent; color:var(--text-dim); font-size:12.5px;
+    padding:7px 11px; cursor:pointer; border-right:1px solid var(--border);
+  }
+  .pd-seg button:last-child{ border-right:0; }
+  .pd-seg button:hover{ color:var(--text); background:var(--panel-2); }
+  .pd-seg button.on{ background:var(--accent-soft); color:var(--accent-strong); }
+
+  .pd-edtools{
+    display:flex; align-items:center; gap:3px; flex-wrap:wrap;
+    padding:6px 12px; border-bottom:1px solid var(--border-soft);
+    background:var(--panel); flex-shrink:0;
+  }
+  .pd-tool{
+    min-width:32px; height:30px; padding:0 8px; border-radius:6px;
+    border:1px solid transparent; background:transparent; color:var(--text-dim);
+    font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .pd-tool:hover{ background:var(--panel-2); color:var(--text); border-color:var(--border); }
+  .pd-tool:focus-visible, .pd-seg button:focus-visible, .pd-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .pd-tool svg{ width:16px; height:16px; }
+  .pd-tool .sw{ width:14px; height:3px; border-radius:1px; background:#c62828; display:block; margin-top:1px; }
+  .pd-tool-sep{ width:1px; height:20px; background:var(--border); margin:0 5px; }
+
+  .pd-edbody{ flex:1; display:flex; min-height:0; }
+  .pd-edsrc, .pd-edprev{ flex:1 1 50%; min-width:0; display:flex; flex-direction:column; position:relative; }
+  .pd-edsrc{ border-right:1px solid var(--border); background:var(--bg); }
+  .pd-edbody[data-modo="editor"] .pd-edprev{ display:none; }
+  .pd-edbody[data-modo="editor"] .pd-edsrc{ border-right:0; }
+  .pd-edbody[data-modo="preview"] .pd-edsrc{ display:none; }
+
+  .pd-edhl, #pd-ed-text{
+    position:absolute; inset:0; margin:0; border:0;
+    padding:16px 18px 40px;
+    font-family:var(--mono); font-size:13.5px; line-height:1.65;
+    white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; tab-size:4;
+    overflow-y:scroll; overflow-x:hidden;
+  }
+  .pd-edhl{ color:var(--text); pointer-events:none; scrollbar-color:transparent transparent; }
+  .pd-edhl::-webkit-scrollbar{ background:transparent; }
+  .pd-edhl::-webkit-scrollbar-thumb{ background:transparent; }
+  #pd-ed-text{
+    background:transparent; color:transparent; caret-color:var(--text);
+    outline:none; resize:none; width:100%; height:100%;
+  }
+  #pd-ed-text::selection{ background:rgba(120,160,255,0.28); color:transparent; }
+  #pd-ed-text::placeholder{ color:var(--text-faint); }
+  .pd-edhl .t{ color:var(--accent-strong); }
+  .pd-edhl .u{ color:var(--danger); text-decoration:underline wavy; text-decoration-thickness:1px; }
+  .pd-edhl .p{ color:var(--text-faint); }
+  .pd-edhl .e{ color:var(--ok); }
+  .pd-edhl .h{ color:#8aa8ff; }
+  body.pd-light .pd-edhl .h{ color:#3654b8; }
+
+  .pd-ed-drop{
+    position:absolute; inset:10px; border:2px dashed var(--accent); border-radius:12px;
+    background:var(--accent-soft); color:var(--accent-strong); font-size:14px; font-weight:600;
+    display:none; align-items:center; justify-content:center; pointer-events:none;
+  }
+  .pd-edsrc.arrastando .pd-ed-drop{ display:flex; }
+
+  .pd-edprev-head{
+    display:flex; justify-content:space-between; gap:10px; align-items:center;
+    padding:7px 14px; font-size:12px; color:var(--text-faint);
+    border-bottom:1px solid var(--border-soft); background:var(--bg-soft);
+  }
+  #pd-ed-preview{ flex:1; border:0; width:100%; background:#fff; }
+
+  .pd-edstatus{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:6px 16px; border-top:1px solid var(--border-soft); background:var(--bg-soft);
+    font-size:12px; color:var(--text-dim); flex-shrink:0;
+  }
+  .pd-edstatus .grow{ flex:1; }
+  .pd-edstatus label{ display:flex; align-items:center; gap:6px; }
+  .pd-edstatus select{
+    background:var(--panel); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:3px 6px; font-size:12px; font-family:inherit;
+  }
+  .pd-ed-avisos{
+    border:1px solid var(--border); background:var(--panel); color:var(--text-dim);
+    border-radius:999px; padding:3px 10px; font-size:12px; cursor:default;
+  }
+  .pd-ed-avisos.tem{ color:var(--danger); border-color:var(--danger); cursor:pointer; }
+  .pd-ed-avisos.ok{ color:var(--ok); }
+
+  /* popovers / menus / modais / toast */
+  .pd-pop{
+    position:fixed; z-index:60; background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; box-shadow:var(--shadow); padding:6px; min-width:200px;
+    max-height:70vh; overflow:auto;
+  }
+  .pd-pop .mi{
+    display:block; width:100%; text-align:left; border:0; background:transparent; color:var(--text);
+    padding:7px 10px; border-radius:6px; font-size:13px; cursor:pointer;
+  }
+  .pd-pop .mi:hover, .pd-pop .mi:focus-visible{ background:var(--accent-soft); outline:none; }
+  .pd-pop .mi code{ font-family:var(--mono); font-size:12px; color:var(--accent-strong); }
+  .pd-pop .mi small{ display:block; color:var(--text-faint); font-size:11.5px; margin-top:2px; }
+  .pd-pop .mh{ font-size:11.5px; color:var(--text-faint); padding:8px 10px 4px; }
+  .pd-cores{ display:grid; grid-template-columns:repeat(5, 28px); gap:6px; padding:6px 8px; }
+  .pd-cores button{ width:28px; height:28px; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
+  .pd-cores button:hover{ transform:scale(1.08); }
+  .pd-pop .linha{ display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:12.5px; color:var(--text-dim); }
+  .pd-pop input[type=color]{ width:36px; height:26px; border:1px solid var(--border); border-radius:5px; background:none; padding:0; cursor:pointer; }
+
+  .pd-modal-bg{
+    position:fixed; inset:0; z-index:70; background:rgba(5,8,12,0.55);
+    display:flex; align-items:flex-start; justify-content:center; padding:12vh 16px 16px;
+  }
+  .pd-modal-bg[hidden]{ display:none; }
+  .pd-modal{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow); width:100%; max-width:440px; padding:22px 22px 18px;
+  }
+  .pd-modal.largo{ max-width:760px; }
+  .pd-modal h3{ margin:0 0 14px; font-size:16px; }
+  .pd-modal label.campo{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:12px; }
+  .pd-modal label.campo input[type=text], .pd-modal label.campo input[type=number], .pd-modal label.campo select{
+    display:block; width:100%; margin-top:5px; padding:8px 10px; border-radius:7px;
+    border:1px solid var(--border); background:var(--bg-soft); color:var(--text);
+    font-size:13.5px; font-family:inherit;
+  }
+  .pd-modal label.campo input:focus, .pd-modal label.campo select:focus{ outline:none; border-color:var(--accent); }
+  .pd-modal .mono{ font-family:var(--mono) !important; }
+  .pd-modal .dica{ font-size:12px; color:var(--text-faint); margin:-6px 0 12px; line-height:1.45; }
+  .pd-modal .dupla{ display:flex; gap:12px; }
+  .pd-modal .dupla > *{ flex:1; }
+  .pd-modal .check{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); margin-bottom:12px; }
+  .pd-modal .acoes{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+  .pd-modal .acoes .pd-btn.primary{ background:var(--accent); border-color:var(--accent); color:#1a1206; font-weight:600; }
+  .pd-modal .ref{ max-height:60vh; overflow:auto; font-size:13px; }
+  .pd-modal .ref table{ width:100%; border-collapse:collapse; }
+  .pd-modal .ref td{ padding:7px 8px; border-bottom:1px solid var(--border-soft); vertical-align:top; color:var(--text-dim); }
+  .pd-modal .ref td:first-child{ font-family:var(--mono); font-size:12px; color:var(--accent-strong); white-space:nowrap; }
+  .pd-modal .ref h4{ margin:16px 0 6px; font-size:13px; color:var(--text); }
+  .pd-modal .ref p{ color:var(--text-dim); line-height:1.5; margin:6px 0; }
+  .pd-modal .ref code{ font-family:var(--mono); font-size:12px; background:var(--panel-2); padding:1px 4px; border-radius:4px; }
+
+  .pd-toast{
+    position:fixed; right:18px; bottom:44px; z-index:80;
+    background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--ok);
+    color:var(--text); padding:10px 14px; border-radius:8px; font-size:13px;
+    box-shadow:var(--shadow); max-width:380px;
+    opacity:0; transform:translateY(6px); transition:opacity .18s, transform .18s; pointer-events:none;
+  }
+  .pd-toast.vis{ opacity:1; transform:none; }
+  .pd-toast.erro{ border-left-color:var(--danger); }
+
+  @media (max-width:900px){
+    .pd-edbody[data-modo="split"]{ flex-direction:column; }
+    .pd-edbody[data-modo="split"] .pd-edsrc{ border-right:0; border-bottom:1px solid var(--border); }
+    .pd-btn-editor span{ display:none; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .pd-toast{ transition:none; }
+  }
+
   @media (max-width:720px){
     .pd-hero h1{ font-size:21px; }
     .pd-search-box{ padding:13px 16px; }
@@ -247,6 +428,10 @@
       <div class="pd-brand-sub" id="pd-folder-label"></div>
     </div>
     <div class="pd-topline-right">
+      <button class="pd-btn pd-btn-editor" id="pd-btn-editor" title="Criar ou editar um TXT de documentação PasDoc (para usar com @include)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        <span>Editor TXT</span>
+      </button>
       <a class="pd-btn icon" href="https://github.com/NdeFaria/PerpetualDocWeb" target="_blank" rel="noopener noreferrer" title="Ver código-fonte no GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a10.98 10.98 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.44-2.69 5.42-5.25 5.7.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .3.2.66.79.55A10.52 10.52 0 0023.5 12c0-6.35-5.15-11.5-11.5-11.5z"/></svg>
       </a>
@@ -309,7 +494,70 @@
     </div>
   </div>
 
+  <!-- EDITOR TXT (PasDoc) -->
+  <div id="view-editor">
+    <div class="pd-edbar">
+      <button class="pd-btn icon" id="pd-ed-voltar" title="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="pd-ed-file">
+        <span class="pd-ed-dot" id="pd-ed-dot"></span>
+        <span class="pd-ed-nome" id="pd-ed-nome">Sem título.txt</span>
+        <span class="pd-ed-onde" id="pd-ed-onde"></span>
+      </div>
+      <div class="pd-ed-grupo">
+        <button class="pd-btn" id="pd-ed-novo" title="Começar um arquivo novo">Novo</button>
+        <button class="pd-btn" id="pd-ed-abrir" title="Abrir um .txt existente para editar (Ctrl+O)">Abrir…</button>
+        <button class="pd-btn primary" id="pd-ed-salvar" title="Salvar (Ctrl+S)">Salvar</button>
+        <button class="pd-btn" id="pd-ed-salvarcomo" title="Exportar o TXT escolhendo onde salvar (Ctrl+Shift+S)">Salvar como…</button>
+      </div>
+      <div class="pd-ed-grupo">
+        <button class="pd-btn" id="pd-ed-include" title="Copia a linha de @include para colar no comentário da unit/classe no fonte">Copiar @include</button>
+        <div class="pd-seg" id="pd-ed-modo" role="group" aria-label="Modo de exibição">
+          <button data-modo="editor">Editor</button><button data-modo="split">Dividido</button><button data-modo="preview">Preview</button>
+        </div>
+        <button class="pd-btn icon" id="pd-ed-ajuda" title="Referência das tags PasDoc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 2-2.5 3.5M12 17h.01"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pd-edtools" id="pd-ed-tools" role="toolbar" aria-label="Formatação PasDoc"></div>
+    <div class="pd-edbody" id="pd-ed-body" data-modo="split">
+      <div class="pd-edsrc" id="pd-ed-src">
+        <pre class="pd-edhl" id="pd-ed-hl" aria-hidden="true"></pre>
+        <textarea id="pd-ed-text" spellcheck="false" autocomplete="off" aria-label="Conteúdo do TXT com tags PasDoc"
+          placeholder="Escreva a documentação aqui. Use os botões acima para inserir as tags do PasDoc (negrito, cor, links, listas, tabelas…).&#10;&#10;Também dá para arrastar um .txt para cá para abri-lo."></textarea>
+        <div class="pd-ed-drop">Solte o .txt para abrir</div>
+      </div>
+      <div class="pd-edprev">
+        <div class="pd-edprev-head"><span>Pré-visualização</span><span id="pd-ed-css-info"></span></div>
+        <iframe id="pd-ed-preview" title="Pré-visualização da documentação" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+      </div>
+    </div>
+    <div class="pd-edstatus">
+      <span id="pd-ed-pos">Ln 1, Col 1</span>
+      <span id="pd-ed-cont"></span>
+      <span class="grow"></span>
+      <button class="pd-ed-avisos" id="pd-ed-avisos" type="button"></button>
+      <label>Codificação
+        <select id="pd-ed-enc">
+          <option value="windows-1252">ANSI (Windows-1252)</option>
+          <option value="utf-8">UTF-8</option>
+          <option value="utf-8-bom">UTF-8 com BOM</option>
+        </select>
+      </label>
+      <label>Quebra de linha
+        <select id="pd-ed-eol">
+          <option value="crlf">CRLF (Windows)</option>
+          <option value="lf">LF</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
 </div>
+<div class="pd-modal-bg" id="pd-modal-bg" hidden></div>
+<div class="pd-toast" id="pd-toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
@@ -978,10 +1226,14 @@ function atualizarBreadcrumb(relPath){
 }
 
 function mostrarViewDoc(){
+  document.getElementById("view-editor").classList.remove("active");
+  document.getElementById("pd-btn-editor").classList.remove("on");
   document.getElementById("view-home").classList.add("hidden");
   document.getElementById("view-doc").classList.add("active");
 }
 function mostrarViewHome(){
+  document.getElementById("view-editor").classList.remove("active");
+  document.getElementById("pd-btn-editor").classList.remove("on");
   document.getElementById("view-doc").classList.remove("active");
   document.getElementById("view-home").classList.remove("hidden");
   document.getElementById("pd-frame").src = "about:blank";
@@ -1298,6 +1550,7 @@ function aplicarTema(tema, semRecarregarDoc){
 
   const btn = document.getElementById("pd-btn-theme");
   if (btn) btn.innerHTML = tema === "dark" ? ICONE_SOL : ICONE_LUA;
+  edAoTrocarTema();
 
   if (!semRecarregarDoc && currentPath){
     document.getElementById("pd-frame").src = caminhoParaUrl(currentPath) + "?_pd=" + Date.now();
@@ -1311,6 +1564,7 @@ document.getElementById("pd-btn-theme").addEventListener("click", () => {
 /* ---------------------------- Eventos de UI ---------------------------- */
 
 document.getElementById("pd-brand").addEventListener("click", () => {
+  if (edAtivo()){ fecharEditor("home"); return; }
   if (rootHandle) mostrarViewHome();
 });
 
@@ -1348,6 +1602,7 @@ document.getElementById("pd-search-input").addEventListener("keydown", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){
+    if (edAtivo()) return;
     e.preventDefault();
     if (document.getElementById("view-doc").classList.contains("active")) mostrarViewHome();
     else document.getElementById("pd-search-input").focus();
@@ -1371,6 +1626,1502 @@ document.getElementById("pd-inpage-search").addEventListener("keydown", (e) => {
 });
 document.getElementById("pd-btn-inpage-next").addEventListener("click", () => irParaReferencia("next"));
 document.getElementById("pd-btn-inpage-prev").addEventListener("click", () => irParaReferencia("prev"));
+
+/* =========================================================================
+   Editor TXT (PasDoc)
+   Edita arquivos .txt com tags do PasDoc, pensados para entrar na
+   documentação via @include direto no fonte. Os botões só inserem as tags
+   no texto — o arquivo continua sendo um TXT puro. A pré-visualização é uma
+   aproximação local de como o PasDoc vai renderizar; nada sai do navegador.
+   ========================================================================= */
+
+const ED_DRAFT_KEY = "perpetualdoc.txtdraft";
+const ED_PREFS_KEY = "perpetualdoc.txtprefs";
+const DB_KEY_TXT = "txtFile";
+const ED_TIPOS_ARQUIVO = [{ description: "Texto de documentação PasDoc", accept: { "text/plain": [".txt"] } }];
+
+const PD_TAGS_CONHECIDAS = new Set([
+  "bold","italic","code","preformatted","longcode","link","url","br","section","anchor",
+  "unorderedlist","orderedlist","definitionlist","item","itemlabel","itemspacing",
+  "table","row","rowhead","cell","image","html","latex","noautolink","noautolinkhere",
+  "true","false","nil","param","returns","return","raises","raise","see","seealso",
+  "author","created","lastmod","deprecated","abstract","value","include","includecode",
+  "inherited","inheritedclass","name","classname","exclude","cvs","member"
+]);
+const PD_TAGS_SEM_PARAM = new Set(["br","true","false","nil","inherited","inheritedclass","name","classname","noautolinkhere","exclude","deprecated"]);
+
+const ed = {
+  iniciado: false,
+  handle: null,        // FileSystemFileHandle do arquivo aberto/salvo (null = arquivo novo)
+  nome: "",
+  enc: "windows-1252",
+  eol: "crlf",
+  sujo: false,
+  viewAnterior: "home",
+  diag: [],
+  cssPasta: null,      // { caminho, texto } do pasdoc.css da pasta conectada
+  previewPronto: false
+};
+
+function edPrefs(){
+  try { return Object.assign({ encNovo: "windows-1252", eolNovo: "crlf", modo: "split" }, JSON.parse(localStorage.getItem(ED_PREFS_KEY) || "{}")); }
+  catch(e){ return { encNovo: "windows-1252", eolNovo: "crlf", modo: "split" }; }
+}
+function edSalvarPrefs(parcial){
+  try { localStorage.setItem(ED_PREFS_KEY, JSON.stringify(Object.assign(edPrefs(), parcial))); } catch(e) { /* sem persistência */ }
+}
+
+/* ---------------------------- Parser PasDoc -> HTML (pré-visualização) ---------------------------- */
+
+function edEsc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/** Índice do ")" que fecha o "(" em i, respeitando @( @) @@. -1 se não fechar. */
+function pdAcharFecha(s, i, fim){
+  let depth = 0;
+  for (let k = i; k < fim; k++){
+    const c = s[k];
+    if (c === "@" && k + 1 < fim && (s[k+1] === "(" || s[k+1] === ")" || s[k+1] === "@")){ k++; continue; }
+    if (c === "(") depth++;
+    else if (c === ")"){ depth--; if (depth === 0) return k; }
+  }
+  return -1;
+}
+
+/** Lê uma tag a partir do "@" em i. null se não for tag. */
+function pdLerTag(s, i, fim){
+  let j = i + 1;
+  if (j >= fim || !/[A-Za-z]/.test(s[j])) return null;
+  while (j < fim && /[A-Za-z0-9_]/.test(s[j])) j++;
+  const nome = s.slice(i + 1, j);
+  if (j < fim && s[j] === "("){
+    const k = pdAcharFecha(s, j, fim);
+    if (k === -1) return { nome, ini: i, argIni: j + 1, argFim: fim, fim, temParen: true, aberto: true };
+    return { nome, ini: i, argIni: j + 1, argFim: k, fim: k + 1, temParen: true, aberto: false };
+  }
+  return { nome, ini: i, argIni: j, argFim: j, fim: j, temParen: false, aberto: false };
+}
+
+function pdDiag(ctx, pos, msg){
+  if (!ctx.diag.some(d => d.pos === pos && d.msg === msg)) ctx.diag.push({ pos, msg });
+}
+
+/** Divide [a,b) em parágrafos (linhas em branco), sem cortar dentro de tags. */
+function pdParagrafos(s, a, b){
+  const partes = [];
+  let ini = a;
+  for (let k = a; k < b; k++){
+    const c = s[k];
+    if (c === "@"){
+      if (k + 1 < b && "()@".includes(s[k+1])){ k++; continue; }
+      const t = pdLerTag(s, k, b);
+      if (t){ k = t.fim - 1; continue; }
+    } else if (c === "\n"){
+      let m = k + 1;
+      while (m < b && (s[m] === " " || s[m] === "\t" || s[m] === "\r")) m++;
+      if (m < b && s[m] === "\n"){
+        partes.push([ini, k]);
+        while (m < b && /\s/.test(s[m])) m++;
+        ini = m;
+        k = m - 1;
+      }
+    }
+  }
+  partes.push([ini, b]);
+  return partes.filter(([x, y]) => s.slice(x, y).trim());
+}
+
+const PD_BLOCO_RE = /^<(ul|ol|dl|table|pre|h[1-6]|div|figure)\b/i;
+
+function pdBlocos(s, a, b, ctx, forcarP){
+  const partes = pdParagrafos(s, a, b);
+  if (!partes.length) return "";
+  if (partes.length === 1 && !forcarP) return pdInline(s, partes[0][0], partes[0][1], ctx).trim();
+  return partes.map(([x, y]) => {
+    const h = pdInline(s, x, y, ctx).trim();
+    if (!h) return "";
+    return PD_BLOCO_RE.test(h) ? h : "<p>" + h + "</p>";
+  }).join("\n");
+}
+
+const PD_URL_RE = /(?:https?:\/\/|ftp:\/\/|www\.)[^\s()<>"]+/y;
+
+function pdInline(s, a, b, ctx){
+  let out = "";
+  let k = a;
+  let run = a;
+  const flush = (ate) => { if (ate > run) out += edEsc(s.slice(run, ate)); };
+  while (k < b){
+    const c = s[k];
+    if (c === "@"){
+      const n = s[k+1];
+      if (k + 1 < b && (n === "@" || n === "(" || n === ")")){
+        flush(k); out += edEsc(n); k += 2; run = k; continue;
+      }
+      const t = pdLerTag(s, k, b);
+      if (t){
+        flush(k);
+        if (t.aberto) pdDiag(ctx, t.ini, "@" + t.nome + "( abre parêntese e não fecha");
+        out += pdTag(s, t, ctx);
+        k = t.fim; run = k; continue;
+      }
+      k++; continue;
+    }
+    if ((c === "h" || c === "f" || c === "w") && (k === a || !/[A-Za-z0-9_]/.test(s[k-1]))){
+      PD_URL_RE.lastIndex = k;
+      const m = PD_URL_RE.exec(s);
+      if (m && k + m[0].length <= b){
+        let url = m[0].replace(/[.,;:!?]+$/, "");
+        flush(k);
+        const href = /^www\./i.test(url) ? "http://" + url : url;
+        out += '<a href="' + edEsc(href) + '" target="_blank" rel="noopener">' + edEsc(url) + "</a>";
+        k += url.length; run = k; continue;
+      }
+    }
+    k++;
+  }
+  flush(b);
+  return out;
+}
+
+/** Primeiro "token" (até espaço) de [a,b) e o início do resto. */
+function pdToken(s, a, b){
+  let p = a;
+  while (p < b && /\s/.test(s[p])) p++;
+  const ti = p;
+  while (p < b && !/\s/.test(s[p])) p++;
+  const tf = p;
+  while (p < b && /\s/.test(s[p])) p++;
+  return { tok: s.slice(ti, tf), resto: p };
+}
+
+/** Tags-filhas diretas (ex.: @item dentro de @unorderedList). */
+function pdFilhos(s, a, b, ctx, permitidas, pai){
+  const lista = [];
+  let avisouTexto = false;
+  let k = a;
+  while (k < b){
+    const c = s[k];
+    if (c === "@" && k + 1 < b && /[A-Za-z]/.test(s[k+1])){
+      const t = pdLerTag(s, k, b);
+      if (t.aberto) pdDiag(ctx, t.ini, "@" + t.nome + "( abre parêntese e não fecha");
+      if (permitidas.includes(t.nome.toLowerCase())) lista.push(t);
+      else pdDiag(ctx, t.ini, "@" + t.nome + " não é permitido direto dentro de @" + pai);
+      k = t.fim; continue;
+    }
+    if (!/\s/.test(c) && !avisouTexto){
+      pdDiag(ctx, k, "Texto solto dentro de @" + pai + " — ele não aparece na documentação");
+      avisouTexto = true;
+    }
+    k++;
+  }
+  return lista;
+}
+
+let edNomesDoc = null, edNomesDocTam = -1, edNomesDocLista = [];
+function edNomesDocumentados(){
+  if (edNomesDoc && edNomesDocTam === fileMap.size) return edNomesDoc;
+  edNomesDoc = new Set();
+  const lista = new Set();
+  for (const p of fileMap.keys()){
+    if (!/\.html?$/i.test(p)) continue;
+    const base = nameOf(p).replace(/\.html?$/i, "");
+    if (/^(index|allitems|allunits|allclasses|allclasseshierarchy|allfunctions|alltypes|allvariables|allconstants|allidentifiers|legend|introduction|conclusion|tipue_results)$/i.test(base)) continue;
+    const partes = base.split(".");
+    for (let i = 0; i < partes.length; i++){
+      edNomesDoc.add(partes.slice(i).join(".").toLowerCase());
+      if (i > 0) lista.add(partes.slice(i).join("."));
+    }
+    lista.add(base);
+  }
+  edNomesDocLista = [...lista].sort((x, y) => x.localeCompare(y));
+  edNomesDocTam = fileMap.size;
+  return edNomesDoc;
+}
+/** true: existe na documentação conectada; false: não achado; null: sem pasta conectada. */
+function edStatusLink(ident){
+  if (!fileMap.size) return null;
+  const set = edNomesDocumentados();
+  const partes = ident.toLowerCase().split(".");
+  for (let n = partes.length; n >= 1; n--){
+    if (set.has(partes.slice(0, n).join("."))) return true;
+  }
+  return false;
+}
+
+const PAS_KW = new Set(("and array as asm begin case class const constructor destructor div do downto else end except exports file " +
+  "finalization finally for function goto if implementation in inherited initialization inline interface is label library mod nil not " +
+  "object of or out packed procedure program property raise record repeat resourcestring set shl shr string then threadvar to try type " +
+  "unit until uses var while with xor override virtual abstract overload reintroduce private protected public published strict").split(" "));
+
+function pdDestacarPascal(code){
+  const re = /(\{\$[\s\S]*?\})|(\{[\s\S]*?\}|\(\*[\s\S]*?\*\)|\/\/[^\n]*)|('(?:[^']|'')*')|([A-Za-z_][A-Za-z0-9_]*)|([\s\S])/g;
+  let out = "", m;
+  while ((m = re.exec(code))){
+    if (m[1]) out += '<span class="pascal_compiler_comment">' + edEsc(m[1]) + "</span>";
+    else if (m[2]) out += '<span class="pascal_comment">' + edEsc(m[2]) + "</span>";
+    else if (m[3]) out += '<span class="pascal_string">' + edEsc(m[3]) + "</span>";
+    else if (m[4]) out += PAS_KW.has(m[4].toLowerCase()) ? '<span class="pascal_keyword">' + edEsc(m[4]) + "</span>" : edEsc(m[4]);
+    else out += edEsc(m[5]);
+  }
+  return out;
+}
+
+function pdTag(s, t, ctx){
+  const nome = t.nome.toLowerCase();
+  const A = t.argIni, B = t.argFim;
+  const raw = () => s.slice(A, B);
+  const inl = () => pdInline(s, A, B, ctx);
+  const blk = () => pdBlocos(s, A, B, ctx, false);
+
+  if (!PD_TAGS_CONHECIDAS.has(nome)){
+    pdDiag(ctx, t.ini, "Tag desconhecida @" + t.nome + " (para escrever um @ literal use @@)");
+    return edEsc(s.slice(t.ini, t.fim));
+  }
+  if (!t.temParen && !PD_TAGS_SEM_PARAM.has(nome)){
+    pdDiag(ctx, t.ini, "@" + t.nome + " precisa de parâmetro entre parênteses");
+    return edEsc("@" + t.nome);
+  }
+
+  switch (nome){
+    case "bold": return "<b>" + blk() + "</b>";
+    case "italic": return "<i>" + blk() + "</i>";
+    case "code": return "<code>" + inl() + "</code>";
+    case "noautolink": return inl();
+    case "noautolinkhere": return "";
+    case "br": return "<br>";
+    case "true": return "<code>True</code>";
+    case "false": return "<code>False</code>";
+    case "nil": return "<code>nil</code>";
+    case "inherited": case "inheritedclass": case "name": case "classname":
+      return '<code class="pd-auto" title="Preenchido pelo PasDoc conforme o item documentado">@' + edEsc(t.nome) + "</code>";
+    case "html": return raw();
+    case "latex": return "";
+    case "anchor": {
+      const nm = pdToken(s, A, B).tok;
+      return '<a id="' + edEsc(nm) + '"></a>';
+    }
+    case "link": {
+      const { tok, resto } = pdToken(s, A, B);
+      if (!tok){ pdDiag(ctx, t.ini, "@link() vazio"); return ""; }
+      const texto = resto < B ? pdInline(s, resto, B, ctx).trim() : "";
+      const st = edStatusLink(tok);
+      const cls = st === null ? "pd-lk" : (st ? "pd-lk ok" : "pd-lk nf");
+      const dica = st === null ? tok : (st ? tok + " — encontrado na documentação conectada" : tok + " — não encontrado na documentação conectada (o PasDoc vai avisar se não resolver)");
+      return '<a class="' + cls + '" title="' + edEsc(dica) + '">' + (texto || edEsc(tok)) + "</a>";
+    }
+    case "url": {
+      const { tok, resto } = pdToken(s, A, B);
+      const texto = resto < B ? pdInline(s, resto, B, ctx).trim() : "";
+      const href = /^www\./i.test(tok) ? "http://" + tok : tok;
+      const seguro = /^(https?:|ftp:|mailto:|file:)/i.test(href);
+      return (seguro ? '<a href="' + edEsc(href) + '" target="_blank" rel="noopener">' : "<a>") + (texto || edEsc(tok)) + "</a>";
+    }
+    case "section": {
+      const m = /^\s*(\d+)\s+(\S+)\s+/.exec(raw());
+      if (!m){ pdDiag(ctx, t.ini, "@section precisa de: nível âncora título — ex.: @section(1 Visao Visão geral)"); return inl(); }
+      const nivel = Math.max(1, Math.min(5, parseInt(m[1], 10)));
+      const h = nivel + 1;
+      return "<h" + h + ' class="section"><a id="' + edEsc(m[2]) + '"></a>' + pdInline(s, A + m[0].length, B, ctx).trim() + "</h" + h + ">";
+    }
+    case "preformatted": return '<pre class="preformatted">' + edEsc(raw().replace(/^\r?\n/, "").replace(/@([@()])/g, "$1")) + "</pre>";
+    case "longcode": {
+      const txt = raw();
+      const i0 = txt.search(/\S/);
+      if (i0 === -1){ return ""; }
+      const d = txt[i0];
+      const i1 = txt.lastIndexOf(d);
+      if (i1 <= i0){ pdDiag(ctx, t.ini, "@longCode precisa de um delimitador no início e no fim, ex.: @longCode(# ... #)"); return '<pre class="longcode">' + edEsc(txt) + "</pre>"; }
+      const codigo = txt.slice(i0 + 1, i1).replace(/^[ \t]*\r?\n/, "").replace(/\s+$/, "");
+      return '<pre class="longcode">' + pdDestacarPascal(codigo) + "</pre>";
+    }
+    case "unorderedlist": case "orderedlist": {
+      const filhos = pdFilhos(s, A, B, ctx, ["item", "itemspacing"], t.nome);
+      const compacto = filhos.some(f => f.nome.toLowerCase() === "itemspacing" && /compact/i.test(s.slice(f.argIni, f.argFim)));
+      const tag = nome === "orderedlist" ? "ol" : "ul";
+      const itens = filhos.filter(f => f.nome.toLowerCase() === "item")
+        .map(f => "<li>" + pdBlocos(s, f.argIni, f.argFim, ctx, false) + "</li>").join("");
+      return "<" + tag + (compacto ? ' class="compact"' : "") + ">" + itens + "</" + tag + ">";
+    }
+    case "definitionlist": {
+      const filhos = pdFilhos(s, A, B, ctx, ["item", "itemlabel", "itemspacing"], t.nome);
+      let out = "<dl>";
+      for (const f of filhos){
+        const fn = f.nome.toLowerCase();
+        if (fn === "itemlabel") out += "<dt>" + pdInline(s, f.argIni, f.argFim, ctx).trim() + "</dt>";
+        else if (fn === "item") out += "<dd>" + pdBlocos(s, f.argIni, f.argFim, ctx, false) + "</dd>";
+      }
+      return out + "</dl>";
+    }
+    case "table": {
+      const linhas = pdFilhos(s, A, B, ctx, ["row", "rowhead"], t.nome);
+      if (!linhas.length){ pdDiag(ctx, t.ini, "@table sem nenhuma @row/@rowHead"); return ""; }
+      let out = '<table class="table_tag">';
+      let alterna = 0, colunas = -1;
+      for (const r of linhas){
+        const cab = r.nome.toLowerCase() === "rowhead";
+        const cels = pdFilhos(s, r.argIni, r.argFim, ctx, ["cell"], r.nome);
+        if (colunas === -1) colunas = cels.length;
+        else if (cels.length !== colunas) pdDiag(ctx, r.ini, "Linha com " + cels.length + " célula(s); a primeira linha tem " + colunas + ". O PasDoc exige o mesmo número em todas");
+        const cls = cab ? "listheader" : (alterna++ % 2 === 0 ? "list" : "list2");
+        const tg = cab ? "th" : "td";
+        out += '<tr class="' + cls + '">' + cels.map(c => "<" + tg + ">" + pdBlocos(s, c.argIni, c.argFim, ctx, false) + "</" + tg + ">").join("") + "</tr>";
+      }
+      return out + "</table>";
+    }
+    case "item": case "itemlabel": case "itemspacing":
+      pdDiag(ctx, t.ini, "@" + t.nome + " só vale dentro de uma lista");
+      return nome === "itemspacing" ? "" : blk();
+    case "row": case "rowhead": case "cell":
+      pdDiag(ctx, t.ini, "@" + t.nome + " só vale dentro de @table");
+      return blk();
+    case "image": {
+      const arq = raw().trim();
+      return '<span class="pd-img-ph" title="O PasDoc copia a imagem para a pasta da documentação">🖼 ' + edEsc(arq || "imagem") + "</span>";
+    }
+    case "include": case "includecode":
+      return '<div class="pd-inc">@' + edEsc(t.nome) + "(" + edEsc(raw().trim()) + ") — conteúdo de outro arquivo entra aqui</div>";
+    case "param": case "raises": case "raise": {
+      const { tok, resto } = pdToken(s, A, B);
+      const lista = nome === "param" ? ctx.meta.params : ctx.meta.raises;
+      lista.push({ nome: tok, desc: resto < B ? pdBlocos(s, resto, B, ctx, false) : "" });
+      return "";
+    }
+    case "returns": case "return": ctx.meta.returns.push(blk()); return "";
+    case "see": case "seealso": {
+      const { tok, resto } = pdToken(s, A, B);
+      const st = edStatusLink(tok);
+      const cls = st === null ? "pd-lk" : (st ? "pd-lk ok" : "pd-lk nf");
+      ctx.meta.see.push('<a class="' + cls + '">' + (resto < B ? pdInline(s, resto, B, ctx).trim() : edEsc(tok)) + "</a>");
+      return "";
+    }
+    case "author": ctx.meta.author.push(inl().trim()); return "";
+    case "created": ctx.meta.created.push(inl().trim()); return "";
+    case "lastmod": ctx.meta.lastmod.push(inl().trim()); return "";
+    case "cvs": return "";
+    case "value": ctx.meta.value.push(blk()); return "";
+    case "member": {
+      const { tok, resto } = pdToken(s, A, B);
+      ctx.meta.members.push({ nome: tok, desc: resto < B ? pdBlocos(s, resto, B, ctx, false) : "" });
+      return "";
+    }
+    case "abstract": ctx.meta.abstract.push(blk()); return "";
+    case "deprecated": ctx.meta.deprecated = t.temParen ? (blk() || " ") : " "; return "";
+    case "exclude": ctx.meta.exclude = true; return "";
+  }
+  return edEsc(s.slice(t.ini, t.fim));
+}
+
+function pdRenderizar(texto){
+  const ctx = { diag: [], meta: { params: [], raises: [], returns: [], see: [], author: [], created: [], lastmod: [], value: [], members: [], abstract: [], deprecated: null, exclude: false } };
+  const corpo = pdBlocos(texto, 0, texto.length, ctx, true);
+  const M = ctx.meta;
+  let topo = "", fim = "";
+  if (M.exclude) topo += '<div class="pd-inc">@exclude — este item não vai aparecer na documentação gerada.</div>';
+  if (M.deprecated !== null) topo += '<p class="hint_directive">Aviso: obsoleto.' + (M.deprecated.trim() ? " " + M.deprecated : "") + "</p>";
+  if (M.abstract.length) topo += M.abstract.map(a => '<p class="abstract">' + a + "</p>").join("");
+  const secao = (titulo, conteudo) => '<h6 class="description_section">' + titulo + "</h6>" + conteudo;
+  if (M.params.length) fim += secao("Parâmetros", '<dl class="parameters">' + M.params.map(p => "<dt>" + edEsc(p.nome) + "</dt><dd>" + p.desc + "</dd>").join("") + "</dl>");
+  if (M.members.length) fim += secao("Membros", '<dl class="parameters">' + M.members.map(p => "<dt>" + edEsc(p.nome) + "</dt><dd>" + p.desc + "</dd>").join("") + "</dl>");
+  if (M.returns.length) fim += secao("Retorna", M.returns.map(r => '<p class="return">' + r + "</p>").join(""));
+  if (M.value.length) fim += secao("Valor", M.value.map(r => "<p>" + r + "</p>").join(""));
+  if (M.raises.length) fim += secao("Exceções", '<dl class="exceptions_raised">' + M.raises.map(p => "<dt>" + edEsc(p.nome) + "</dt><dd>" + p.desc + "</dd>").join("") + "</dl>");
+  if (M.see.length) fim += secao("Veja também", '<dl class="see_also">' + M.see.map(x => "<dd>" + x + "</dd>").join("") + "</dl>");
+  if (M.author.length) fim += secao("Autor", M.author.map(x => "<p>" + x + "</p>").join(""));
+  if (M.created.length) fim += secao("Criado", M.created.map(x => "<p>" + x + "</p>").join(""));
+  if (M.lastmod.length) fim += secao("Última modificação", M.lastmod.map(x => "<p>" + x + "</p>").join(""));
+  ctx.diag.sort((x, y) => x.pos - y.pos);
+  return { html: topo + corpo + fim, diag: ctx.diag };
+}
+
+/* ---------------------------- Realce de sintaxe no editor ---------------------------- */
+
+function edDestacarFonte(t){
+  let out = "", last = 0, m;
+  const re = /@@|@[()]|@html\((?:[^()]|\([^()]*\))*\)|@[A-Za-z][A-Za-z0-9_]*|[()]/gi;
+  while ((m = re.exec(t))){
+    out += edEsc(t.slice(last, m.index));
+    const v = m[0];
+    if (v === "@@" || v === "@(" || v === "@)") out += '<span class="e">' + edEsc(v) + "</span>";
+    else if (/^@html\(/i.test(v)) out += '<span class="h">' + edEsc(v) + "</span>";
+    else if (v[0] === "@") out += '<span class="' + (PD_TAGS_CONHECIDAS.has(v.slice(1).toLowerCase()) ? "t" : "u") + '">' + edEsc(v) + "</span>";
+    else out += '<span class="p">' + v + "</span>";
+    last = re.lastIndex;
+  }
+  out += edEsc(t.slice(last));
+  return out + "\n ";
+}
+
+/* ---------------------------- Codificação de arquivo ---------------------------- */
+
+let edMapaCp1252 = null;
+function edCp1252(){
+  if (edMapaCp1252) return edMapaCp1252;
+  edMapaCp1252 = new Map();
+  const d = new TextDecoder("windows-1252");
+  for (let b = 0; b < 256; b++){
+    const ch = d.decode(new Uint8Array([b]));
+    if (!edMapaCp1252.has(ch)) edMapaCp1252.set(ch, b);
+  }
+  return edMapaCp1252;
+}
+
+function edCodificar(texto, enc){
+  if (enc === "windows-1252"){
+    const mapa = edCp1252();
+    const bytes = new Uint8Array(texto.length);
+    const perdidos = new Set();
+    let n = 0;
+    for (const ch of texto){
+      const b = mapa.get(ch);
+      if (b === undefined){ perdidos.add(ch); bytes[n++] = 0x3F; }
+      else bytes[n++] = b;
+    }
+    return { bytes: bytes.slice(0, n), perdidos };
+  }
+  const corpo = new TextEncoder().encode(texto);
+  if (enc === "utf-8-bom"){
+    const b = new Uint8Array(corpo.length + 3);
+    b.set([0xEF, 0xBB, 0xBF]); b.set(corpo, 3);
+    return { bytes: b, perdidos: new Set() };
+  }
+  return { bytes: corpo, perdidos: new Set() };
+}
+
+async function edDecodificar(file){
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const prefs = edPrefs();
+  if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) return { texto: new TextDecoder("utf-8").decode(buf.subarray(3)), enc: "utf-8-bom" };
+  if (buf[0] === 0xFF && buf[1] === 0xFE) return { texto: new TextDecoder("utf-16le").decode(buf.subarray(2)), enc: "utf-8-bom" };
+  if (buf[0] === 0xFE && buf[1] === 0xFF) return { texto: new TextDecoder("utf-16be").decode(buf.subarray(2)), enc: "utf-8-bom" };
+  let ascii = true;
+  for (let i = 0; i < buf.length; i++){ if (buf[i] > 0x7F){ ascii = false; break; } }
+  if (ascii) return { texto: new TextDecoder("utf-8").decode(buf), enc: prefs.encNovo };
+  try { return { texto: new TextDecoder("utf-8", { fatal: true }).decode(buf), enc: "utf-8" }; }
+  catch(e){ return { texto: new TextDecoder("windows-1252").decode(buf), enc: "windows-1252" }; }
+}
+
+/* ---------------------------- Handle do arquivo (IndexedDB) ---------------------------- */
+
+async function edGuardarHandle(h){
+  try {
+    const db = await openDb();
+    await new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, "readwrite");
+      if (h) tx.objectStore(DB_STORE).put(h, DB_KEY_TXT);
+      else tx.objectStore(DB_STORE).delete(DB_KEY_TXT);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch(e){ /* segue sem lembrar o arquivo */ }
+}
+async function edCarregarHandle(){
+  try {
+    const db = await openDb();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, "readonly");
+      const req = tx.objectStore(DB_STORE).get(DB_KEY_TXT);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch(e){ return null; }
+}
+
+/* ---------------------------- Estado / UI do editor ---------------------------- */
+
+const $ed = (id) => document.getElementById(id);
+function edTa(){ return $ed("pd-ed-text"); }
+
+let edToastTimer = null;
+function edToast(msg, erro){
+  const el = $ed("pd-toast");
+  el.textContent = msg;
+  el.classList.toggle("erro", !!erro);
+  el.classList.add("vis");
+  clearTimeout(edToastTimer);
+  edToastTimer = setTimeout(() => el.classList.remove("vis"), erro ? 5200 : 2600);
+}
+
+function edAtualizarCabecalho(){
+  $ed("pd-ed-nome").textContent = ed.nome || "Sem título.txt";
+  $ed("pd-ed-dot").classList.toggle("sujo", ed.sujo);
+  $ed("pd-ed-dot").title = ed.sujo ? "Alterações não salvas" : "Tudo salvo";
+  $ed("pd-ed-onde").textContent = ed.handle
+    ? (ed.sujo ? "não salvo · Salvar sobrescreve o arquivo aberto" : "salvo")
+    : (ed.sujo ? "arquivo novo · Salvar vai perguntar onde gravar" : "arquivo novo");
+  $ed("pd-ed-salvar").title = ed.handle ? "Salvar por cima de " + ed.handle.name + " (Ctrl+S)" : "Salvar — vai perguntar onde gravar (Ctrl+S)";
+  $ed("pd-ed-enc").value = ed.enc;
+  $ed("pd-ed-eol").value = ed.eol;
+  document.title = (ed.sujo ? "● " : "") + (ed.nome || "Sem título.txt") + " — PerpetualDoc";
+}
+
+function edAtualizarPosicao(){
+  const ta = edTa();
+  const antes = ta.value.slice(0, ta.selectionStart);
+  const ln = antes.split("\n").length;
+  const col = ta.selectionStart - antes.lastIndexOf("\n");
+  $ed("pd-ed-pos").textContent = "Ln " + ln + ", Col " + col;
+  const linhas = ta.value ? ta.value.split("\n").length : 0;
+  $ed("pd-ed-cont").textContent = ta.value.length + " caracteres · " + linhas + " linha(s)";
+}
+
+function edRealce(){
+  const ta = edTa(), hl = $ed("pd-ed-hl");
+  hl.innerHTML = edDestacarFonte(ta.value);
+  hl.scrollTop = ta.scrollTop;
+}
+
+const ED_CSS_PADRAO = `
+  body{ font-family:Verdana,Arial,sans-serif; font-size:13px; color:#000; background:#fff; line-height:1.45; }
+  a:link, a:visited{ color:#C91E0C; font-weight:bold; text-decoration:none; }
+  a[href]:hover{ text-decoration:underline; }
+  h1,h2,h3,h4,h5,h6{ font-family:Verdana,Arial,sans-serif; }
+  h2.section{ font-size:1.5em; } h3.section{ font-size:1.25em; } h4.section{ font-size:1.1em; }
+  code, pre{ font-family:"Courier New",Courier,monospace; }
+  pre.longcode, pre.preformatted{ background:#f4f4f4; border:1px solid #ccc; padding:.6em .8em; overflow:auto; }
+  table.table_tag{ border-collapse:collapse; margin:.6em 0; }
+  table.table_tag td, table.table_tag th{ border:1px solid #999; padding:.3em .6em; text-align:left; vertical-align:top; }
+  tr.listheader{ background:#C91E0C; color:#fff; }
+  tr.list{ background:#FFBF44; } tr.list2{ background:#FFC982; }
+  span.pascal_keyword{ font-weight:bold; }
+  span.pascal_string{ color:#000080; } span.pascal_comment{ color:#000080; font-style:italic; }
+  span.pascal_compiler_comment{ color:#008000; }
+  dl.parameters dt{ color:#000080; font-weight:bold; }
+  h6.description_section{ font-size:1em; margin:1.4em 0 .4em; }
+  p.hint_directive{ color:red; font-weight:bold; }
+  ul.compact li, ol.compact li{ margin:0; }
+`;
+const ED_CSS_EXTRA = `
+  html{ -webkit-font-smoothing:antialiased; }
+  body{ margin:0; padding:18px 24px 40px; }
+  a.pd-lk{ cursor:help; }
+  a.pd-lk.nf{ color:#b35c00 !important; border-bottom:1px dashed #d98a00; }
+  .pd-img-ph{ display:inline-block; padding:6px 10px; border:1px dashed #999; border-radius:4px; font-size:12px; color:#555; background:#fafafa; }
+  .pd-inc{ padding:8px 10px; margin:.5em 0; border-left:3px solid #d98a00; background:rgba(217,138,0,.08); font-size:12px; color:#6b4b0f; }
+  .pd-auto{ opacity:.75; }
+  .pd-vazio{ color:#8b93a3; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif; font-size:13.5px; padding:30px 6px; line-height:1.6; }
+`;
+const ED_CSS_EXTRA_ESCURO = `
+  .pd-img-ph{ background:#101821 !important; color:#c8d2de !important; border-color:#344355 !important; }
+  .pd-inc{ color:#f2c46d !important; }
+  a.pd-lk.nf{ color:#ffb45c !important; }
+`;
+
+function edMontarCssPreview(){
+  const base = ed.cssPasta ? ed.cssPasta.texto : ED_CSS_PADRAO;
+  const escuro = temaAtual() === "dark";
+  return base + "\n" + ED_CSS_EXTRA + (escuro ? "\n" + CSS_TEMA_ESCURO_DOC + "\n" + ED_CSS_EXTRA_ESCURO : "");
+}
+
+async function edCarregarCssDaPasta(){
+  ed.cssPasta = null;
+  if (fileMap.size){
+    const caminho = [...fileMap.keys()].filter(p => nameOf(p).toLowerCase() === "pasdoc.css").sort()[0];
+    if (caminho){
+      try {
+        const texto = await lerComoTexto(await fileMap.get(caminho).getFile());
+        ed.cssPasta = { caminho, texto };
+      } catch(e){ ed.cssPasta = null; }
+    }
+  }
+  $ed("pd-ed-css-info").textContent = ed.cssPasta ? "estilo: " + ed.cssPasta.caminho : "estilo padrão do PasDoc";
+  $ed("pd-ed-css-info").title = ed.cssPasta ? "Usando o pasdoc.css da pasta de documentação conectada" : "Conecte a pasta de documentação para usar o pasdoc.css real";
+  edAplicarCssPreview();
+}
+
+function edAplicarCssPreview(){
+  const doc = edDocPreview();
+  if (!doc) return;
+  doc.getElementById("pd-css").textContent = edMontarCssPreview();
+}
+
+function edDocPreview(){
+  if (!ed.previewPronto) return null;
+  try { return $ed("pd-ed-preview").contentDocument; } catch(e){ return null; }
+}
+
+function edRenderPreview(){
+  const doc = edDocPreview();
+  const texto = edTa().value.replace(/\r\n?/g, "\n");
+  const r = pdRenderizar(texto);
+  ed.diag = r.diag;
+  edAtualizarAvisos();
+  if (!doc) return;
+  const raiz = doc.getElementById("pd-root");
+  raiz.innerHTML = texto.trim()
+    ? r.html
+    : '<div class="pd-vazio">A pré-visualização aparece aqui conforme você escreve.<br>Ela é uma aproximação de como o PasDoc vai mostrar este conteúdo depois do <code>@include</code>.</div>';
+}
+
+function edAtualizarAvisos(){
+  const b = $ed("pd-ed-avisos");
+  const n = ed.diag.length;
+  b.classList.toggle("tem", n > 0);
+  b.classList.toggle("ok", n === 0);
+  b.textContent = n ? "⚠ " + n + " aviso(s)" : "✓ Sem avisos";
+  b.title = n ? "Clique para ver os avisos" : "Nenhum problema de sintaxe encontrado";
+}
+
+let edTimerPreview = null, edTimerRascunho = null;
+function edAoEditar(){
+  if (!ed.sujo){ ed.sujo = true; edAtualizarCabecalho(); }
+  edRealce();
+  edAtualizarPosicao();
+  clearTimeout(edTimerPreview);
+  edTimerPreview = setTimeout(edRenderPreview, 140);
+  clearTimeout(edTimerRascunho);
+  edTimerRascunho = setTimeout(edSalvarRascunho, 500);
+}
+
+function edSalvarRascunho(){
+  try {
+    localStorage.setItem(ED_DRAFT_KEY, JSON.stringify({ texto: edTa().value, nome: ed.nome, enc: ed.enc, eol: ed.eol, sujo: ed.sujo }));
+  } catch(e){ /* sem espaço/sem permissão: segue sem rascunho */ }
+}
+
+function edDefinirTexto(texto){
+  const ta = edTa();
+  ta.value = texto;
+  ta.setSelectionRange(0, 0);
+  ta.scrollTop = 0;
+  edRealce();
+  edAtualizarPosicao();
+  edRenderPreview();
+}
+
+function edMarcarSalvo(){
+  ed.sujo = false;
+  edAtualizarCabecalho();
+  edSalvarRascunho();
+}
+
+/* ---------------------------- Abrir / salvar ---------------------------- */
+
+async function edPermissaoEscrita(h){
+  try {
+    let p = await h.queryPermission({ mode: "readwrite" });
+    if (p !== "granted") p = await h.requestPermission({ mode: "readwrite" });
+    return p === "granted";
+  } catch(e){ return false; }
+}
+
+function edBytesParaSalvar(){
+  let texto = edTa().value.replace(/\r\n?/g, "\n");
+  if (ed.eol === "crlf") texto = texto.replace(/\n/g, "\r\n");
+  let { bytes, perdidos } = edCodificar(texto, ed.enc);
+  if (perdidos.size){
+    const exemplos = [...perdidos].slice(0, 8).join(" ");
+    const trocar = confirm(
+      perdidos.size + " caractere(s) não existem em ANSI (Windows-1252) e virariam \"?\": " + exemplos +
+      "\n\nOK = salvar em UTF-8\nCancelar = salvar em ANSI mesmo assim"
+    );
+    if (trocar){
+      ed.enc = "utf-8";
+      ({ bytes } = edCodificar(texto, ed.enc));
+      edAtualizarCabecalho();
+    }
+  }
+  return bytes;
+}
+
+async function edGravar(h){
+  const bytes = edBytesParaSalvar();
+  const w = await h.createWritable();
+  await w.write(bytes);
+  await w.close();
+}
+
+async function edSalvar(escolherLocal){
+  if (!escolherLocal && ed.handle){
+    try {
+      if (!(await edPermissaoEscrita(ed.handle))){ edToast("Sem permissão para gravar em " + ed.handle.name + ".", true); return false; }
+      await edGravar(ed.handle);
+      edMarcarSalvo();
+      edToast("Salvo em " + ed.handle.name);
+      return true;
+    } catch(e){
+      if (e && e.name === "NotFoundError"){
+        edToast("O arquivo original não existe mais nesse local. Escolha onde salvar.", true);
+        return edSalvar(true);
+      }
+      edToast("Não foi possível salvar: " + (e && e.message ? e.message : e), true);
+      return false;
+    }
+  }
+
+  if (typeof window.showSaveFilePicker !== "function"){
+    const blob = new Blob([edBytesParaSalvar()], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = ed.nome || "documentacao.txt";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    edMarcarSalvo();
+    return true;
+  }
+
+  let h;
+  try {
+    const opcoes = { suggestedName: ed.nome || "documentacao.txt", types: ED_TIPOS_ARQUIVO, id: "pd-editor-txt" };
+    if (ed.handle) opcoes.startIn = ed.handle;
+    h = await window.showSaveFilePicker(opcoes);
+  } catch(e){
+    if (e && e.name === "AbortError") return false;
+    edToast("Não foi possível abrir o seletor de destino: " + (e && e.message ? e.message : e), true);
+    return false;
+  }
+  try {
+    await edGravar(h);
+  } catch(e){
+    edToast("Não foi possível salvar: " + (e && e.message ? e.message : e), true);
+    return false;
+  }
+  ed.handle = h;
+  ed.nome = h.name;
+  await edGuardarHandle(h);
+  edMarcarSalvo();
+  edToast("Salvo em " + h.name);
+  return true;
+}
+
+function edPodeDescartar(acao){
+  return !ed.sujo || confirm("Há alterações não salvas em " + (ed.nome || "Sem título.txt") + ".\n\nDescartar e " + acao + "?");
+}
+
+async function edAbrir(handleRecebido){
+  if (!edPodeDescartar("abrir outro arquivo")) return;
+  let h = handleRecebido;
+  if (!h){
+    if (typeof window.showOpenFilePicker !== "function"){ edToast("Este navegador não permite abrir arquivos para edição. Use Chrome ou Edge.", true); return; }
+    try { [h] = await window.showOpenFilePicker({ types: ED_TIPOS_ARQUIVO, multiple: false, id: "pd-editor-txt" }); }
+    catch(e){
+      if (e && e.name === "AbortError") return;
+      edToast("Não foi possível abrir: " + (e && e.message ? e.message : e), true);
+      return;
+    }
+  }
+  try {
+    const file = await h.getFile();
+    const { texto, enc } = await edDecodificar(file);
+    ed.handle = h;
+    ed.nome = h.name;
+    ed.enc = enc;
+    ed.eol = /\r\n/.test(texto) ? "crlf" : (/\n/.test(texto) ? "lf" : edPrefs().eolNovo);
+    edDefinirTexto(texto.replace(/\r\n?/g, "\n"));
+    await edGuardarHandle(h);
+    edMarcarSalvo();
+    edTa().focus();
+    edToast("Aberto: " + h.name + " (" + $ed("pd-ed-enc").selectedOptions[0].textContent + ")");
+  } catch(e){
+    edToast("Não foi possível ler o arquivo: " + (e && e.message ? e.message : e), true);
+  }
+}
+
+async function edNovo(){
+  if (!edPodeDescartar("começar um arquivo novo")) return;
+  const prefs = edPrefs();
+  ed.handle = null;
+  ed.nome = "";
+  ed.enc = prefs.encNovo;
+  ed.eol = prefs.eolNovo;
+  edDefinirTexto("");
+  await edGuardarHandle(null);
+  edMarcarSalvo();
+  edTa().focus();
+}
+
+/* ---------------------------- Inserção de tags ---------------------------- */
+
+function edInserir(texto, selIni, selFim){
+  const ta = edTa();
+  const a = ta.selectionStart;
+  ta.focus();
+  let ok = false;
+  try { ok = document.execCommand("insertText", false, texto); } catch(e){ ok = false; }
+  if (!ok){
+    ta.setRangeText(texto, ta.selectionStart, ta.selectionEnd, "end");
+    edAoEditar();
+  }
+  if (selIni !== undefined) ta.setSelectionRange(a + selIni, a + (selFim === undefined ? selIni : selFim));
+}
+
+/** Escapa parênteses sem par, que quebrariam a tag em volta. */
+function edEscaparParens(txt){
+  const abertos = [], soltos = new Set();
+  for (let i = 0; i < txt.length; i++){
+    const c = txt[i];
+    if (c === "@" && i + 1 < txt.length && "()@".includes(txt[i+1])){ i++; continue; }
+    if (c === "(") abertos.push(i);
+    else if (c === ")"){ if (abertos.length) abertos.pop(); else soltos.add(i); }
+  }
+  abertos.forEach(i => soltos.add(i));
+  if (!soltos.size) return txt;
+  let out = "";
+  for (let i = 0; i < txt.length; i++) out += soltos.has(i) ? "@" + txt[i] : txt[i];
+  return out;
+}
+
+function edSelecao(){
+  const ta = edTa();
+  return { a: ta.selectionStart, b: ta.selectionEnd, texto: ta.value.slice(ta.selectionStart, ta.selectionEnd) };
+}
+
+function edEnvolver(antes, depois, exemplo){
+  const ta = edTa();
+  const { a, b, texto } = edSelecao();
+  const v = ta.value;
+  // Clicar de novo no mesmo botão com o conteúdo já envolvido desfaz a tag.
+  if (texto && v.slice(a - antes.length, a).toLowerCase() === antes.toLowerCase() && v.slice(b, b + depois.length) === depois){
+    ta.setSelectionRange(a - antes.length, b + depois.length);
+    edInserir(texto, 0, texto.length);
+    return;
+  }
+  const miolo = texto ? edEscaparParens(texto) : exemplo;
+  edInserir(antes + miolo + depois, antes.length, antes.length + miolo.length);
+}
+
+function edInserirBloco(bloco, selIni, selFim){
+  const ta = edTa();
+  const { a, b } = edSelecao();
+  const antes = ta.value.slice(0, a), depois = ta.value.slice(b);
+  const pre = !antes.length || /\n[ \t]*\n[ \t]*$/.test(antes) ? "" : (/\n[ \t]*$/.test(antes) ? "\n" : "\n\n");
+  const pos = !depois.length ? "\n" : (/^[ \t]*\n[ \t]*\n/.test(depois) ? "" : (/^[ \t]*\n/.test(depois) ? "\n" : "\n\n"));
+  edInserir(pre + bloco + pos, selIni === undefined ? undefined : pre.length + selIni, selFim === undefined ? undefined : pre.length + selFim);
+}
+
+function edLinhasSelecionadas(){
+  return edSelecao().texto.split("\n").map(l => l.trim()).filter(Boolean);
+}
+
+function edLimparMarcador(l){ return l.replace(/^([-*•+]|\d+[.)])\s+/, ""); }
+
+function edAncora(txt){
+  const base = String(txt).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, " ").trim().split(" ").filter(Boolean)
+    .map(p => p[0].toUpperCase() + p.slice(1)).join("");
+  return base || "Secao";
+}
+
+function edDelimitador(txt){
+  for (const d of ["#", "$", "%", "|", "~", "^"]) if (!txt.includes(d)) return d;
+  return "#";
+}
+
+/* ---------------------------- Modal / popover genéricos ---------------------------- */
+
+let edModalAoOk = null;
+function edModal(titulo, corpo, aoOk, opcoes){
+  opcoes = opcoes || {};
+  const bg = $ed("pd-modal-bg");
+  bg.innerHTML =
+    '<div class="pd-modal' + (opcoes.largo ? " largo" : "") + '" role="dialog" aria-modal="true" aria-label="' + edEsc(titulo) + '">' +
+      "<h3>" + edEsc(titulo) + "</h3>" +
+      '<div class="corpo">' + corpo + "</div>" +
+      '<div class="acoes">' +
+        (aoOk ? '<button class="pd-btn" data-acao="cancelar">Cancelar</button><button class="pd-btn primary" data-acao="ok">' + edEsc(opcoes.ok || "Inserir") + "</button>"
+              : '<button class="pd-btn primary" data-acao="cancelar">Fechar</button>') +
+      "</div>" +
+    "</div>";
+  bg.hidden = false;
+  edModalAoOk = aoOk;
+  const m = bg.querySelector(".pd-modal");
+  const primeiro = m.querySelector("input,select,textarea") || m.querySelector('[data-acao="ok"]') || m.querySelector("button");
+  if (primeiro){ primeiro.focus(); if (primeiro.select) primeiro.select(); }
+  if (opcoes.aoAbrir) opcoes.aoAbrir(m);
+  return m;
+}
+function edFecharModal(){
+  const bg = $ed("pd-modal-bg");
+  bg.hidden = true;
+  bg.innerHTML = "";
+  edModalAoOk = null;
+  edTa().focus();
+}
+function edConfirmarModal(){
+  const m = $ed("pd-modal-bg").querySelector(".pd-modal");
+  if (!m || !edModalAoOk) return;
+  const ao = edModalAoOk;
+  if (ao(m) === false) return;
+  edFecharModal();
+}
+
+// Guarda a seleção do textarea ao abrir modais/popovers (o foco sai dele).
+let edSelecaoSalva = null;
+function edGuardarSelecao(){ const ta = edTa(); edSelecaoSalva = [ta.selectionStart, ta.selectionEnd]; }
+function edRestaurarSelecao(){ if (edSelecaoSalva){ edTa().focus(); edTa().setSelectionRange(edSelecaoSalva[0], edSelecaoSalva[1]); } }
+
+let edPopAtual = null;
+function edFecharPop(){ if (edPopAtual){ edPopAtual.remove(); edPopAtual = null; } }
+function edPop(ancora, html, aoAbrir){
+  edFecharPop();
+  const pop = document.createElement("div");
+  pop.className = "pd-pop";
+  pop.innerHTML = html;
+  document.body.appendChild(pop);
+  const r = ancora.getBoundingClientRect();
+  const w = pop.offsetWidth;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + "px";
+  pop.style.top = (r.bottom + 6) + "px";
+  edPopAtual = pop;
+  if (aoAbrir) aoAbrir(pop);
+  const foco = pop.querySelector("button,input");
+  if (foco) foco.focus();
+  return pop;
+}
+
+/* ---------------------------- Ações da barra de ferramentas ---------------------------- */
+
+const ED_CORES = [
+  ["#c62828", "Vermelho"], ["#ad1457", "Rosa"], ["#6a1b9a", "Roxo"], ["#1565c0", "Azul"], ["#00838f", "Ciano"],
+  ["#2e7d32", "Verde"], ["#9e9d24", "Oliva"], ["#ef6c00", "Laranja"], ["#6d4c41", "Marrom"], ["#616161", "Cinza"]
+];
+
+function edAplicarCor(cor, fundo){
+  edRestaurarSelecao();
+  const estilo = fundo ? "background-color:" + cor : "color:" + cor;
+  edEnvolver("@html(<span style=\"" + estilo + "\">)", "@html(</span>)", "texto colorido");
+  const sw = document.querySelector('.pd-tool[data-acao="color"] .sw');
+  if (sw) sw.style.background = cor;
+  edSalvarPrefs({ ultimaCor: cor });
+}
+
+const ED_ACOES = {
+  bold: () => edEnvolver("@bold(", ")", "texto em negrito"),
+  italic: () => edEnvolver("@italic(", ")", "texto em itálico"),
+  code: () => edEnvolver("@code(", ")", "NomeDoIdentificador"),
+  br: () => edInserir("@br\n"),
+
+  color: (btn) => {
+    edGuardarSelecao();
+    const ultima = edPrefs().ultimaCor || "#c62828";
+    const pop = edPop(btn,
+      '<div class="mh">Cor do texto</div>' +
+      '<div class="pd-cores">' + ED_CORES.map(([c, n]) => '<button style="background:' + c + '" data-cor="' + c + '" title="' + n + '" aria-label="' + n + '"></button>').join("") + "</div>" +
+      '<div class="linha"><input type="color" id="pd-cor-livre" value="' + ultima + '"> Outra cor <button class="pd-btn" id="pd-cor-aplicar" style="margin-left:auto;padding:4px 10px;font-size:12px">Aplicar</button></div>' +
+      '<div class="linha"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pd-cor-fundo"> Aplicar como destaque (fundo)</label></div>' +
+      '<div class="mh" style="max-width:250px;line-height:1.4">O PasDoc não tem tag de cor: isso usa <code>@html(&lt;span style…&gt;)</code>, que funciona na saída HTML.</div>'
+    );
+    pop.querySelectorAll("[data-cor]").forEach(b => b.addEventListener("click", () => {
+      const fundo = pop.querySelector("#pd-cor-fundo").checked;
+      edFecharPop(); edAplicarCor(b.getAttribute("data-cor"), fundo);
+    }));
+    pop.querySelector("#pd-cor-aplicar").addEventListener("click", () => {
+      const fundo = pop.querySelector("#pd-cor-fundo").checked;
+      const c = pop.querySelector("#pd-cor-livre").value;
+      edFecharPop(); edAplicarCor(c, fundo);
+    });
+  },
+
+  section: () => {
+    edGuardarSelecao();
+    const sel = edSelecao().texto.trim().split("\n")[0] || "";
+    edModal("Título de seção",
+      '<div class="dupla"><label class="campo">Nível<select id="f-nivel"><option value="1">1 — principal</option><option value="2">2 — subseção</option><option value="3">3 — sub-subseção</option></select></label></div>' +
+      '<label class="campo">Título<input type="text" id="f-titulo" value="' + edEsc(sel) + '" placeholder="Ex.: Visão geral"></label>' +
+      '<label class="campo">Âncora (nome interno, sem espaços)<input type="text" class="mono" id="f-ancora" value="' + edEsc(sel ? edAncora(sel) : "") + '"></label>' +
+      '<p class="dica">A âncora permite apontar para a seção com @link. Ela é gerada a partir do título.</p>',
+      (m) => {
+        const titulo = m.querySelector("#f-titulo").value.trim();
+        if (!titulo){ m.querySelector("#f-titulo").focus(); return false; }
+        const anc = (m.querySelector("#f-ancora").value.trim() || edAncora(titulo)).replace(/\s+/g, "");
+        edRestaurarSelecao();
+        edInserirBloco("@section(" + m.querySelector("#f-nivel").value + " " + anc + " " + edEscaparParens(titulo) + ")");
+      },
+      { aoAbrir: (m) => {
+        const t = m.querySelector("#f-titulo"), an = m.querySelector("#f-ancora");
+        let manual = false;
+        an.addEventListener("input", () => { manual = true; });
+        t.addEventListener("input", () => { if (!manual) an.value = t.value.trim() ? edAncora(t.value) : ""; });
+      } }
+    );
+  },
+
+  link: () => {
+    edGuardarSelecao();
+    const sel = edSelecao().texto.trim();
+    const pareceIdent = /^[A-Za-z_][\w.]*$/.test(sel);
+    if (fileMap.size) edNomesDocumentados();
+    const opcoes = edNomesDocLista.slice(0, 3000).map(n => '<option value="' + edEsc(n) + '">').join("");
+    edModal("Link para item documentado",
+      '<label class="campo">Identificador (unit, classe, método, tipo, âncora…)<input type="text" class="mono" id="f-ident" list="pd-dl-idents" value="' + edEsc(pareceIdent ? sel : "") + '" placeholder="Ex.: TMinhaClasse.MeuMetodo"></label>' +
+      '<datalist id="pd-dl-idents">' + opcoes + "</datalist>" +
+      '<label class="campo">Texto exibido (opcional)<input type="text" id="f-texto" value="' + edEsc(pareceIdent ? "" : sel) + '" placeholder="Se vazio, mostra o próprio identificador"></label>' +
+      '<p class="dica">' + (fileMap.size ? "As sugestões vêm da documentação conectada." : "Conecte a pasta de documentação para ter sugestões de nomes.") + "</p>",
+      (m) => {
+        const id = m.querySelector("#f-ident").value.trim().replace(/\s+/g, "");
+        if (!id){ m.querySelector("#f-ident").focus(); return false; }
+        const tx = m.querySelector("#f-texto").value.trim();
+        edRestaurarSelecao();
+        edInserir("@link(" + id + (tx ? " " + edEscaparParens(tx) : "") + ")");
+      }
+    );
+  },
+
+  url: () => {
+    edGuardarSelecao();
+    const sel = edSelecao().texto.trim();
+    const pareceUrl = /^(https?:\/\/|www\.)/i.test(sel);
+    edModal("Link externo",
+      '<label class="campo">Endereço<input type="text" class="mono" id="f-url" value="' + edEsc(pareceUrl ? sel : "") + '" placeholder="https://…"></label>' +
+      '<label class="campo">Texto exibido (opcional)<input type="text" id="f-texto" value="' + edEsc(pareceUrl ? "" : sel) + '"></label>',
+      (m) => {
+        const u = m.querySelector("#f-url").value.trim().replace(/\s/g, "%20").replace(/\(/g, "%28").replace(/\)/g, "%29");
+        if (!u){ m.querySelector("#f-url").focus(); return false; }
+        const tx = m.querySelector("#f-texto").value.trim();
+        edRestaurarSelecao();
+        edInserir("@url(" + u + (tx ? " " + edEscaparParens(tx) : "") + ")");
+      }
+    );
+  },
+
+  anchor: () => {
+    edGuardarSelecao();
+    edModal("Âncora",
+      '<label class="campo">Nome da âncora (sem espaços)<input type="text" class="mono" id="f-nome" placeholder="Ex.: RegrasDeCalculo"></label>' +
+      '<p class="dica">Marca um ponto do texto que pode ser alvo de @link(NomeDaAncora).</p>',
+      (m) => {
+        const n = m.querySelector("#f-nome").value.trim();
+        if (!n){ m.querySelector("#f-nome").focus(); return false; }
+        edRestaurarSelecao();
+        edInserir("@anchor(" + edAncora(n) + ")");
+      }
+    );
+  },
+
+  ul: () => edLista("unorderedList"),
+  ol: () => edLista("orderedList"),
+
+  dl: () => {
+    const linhas = edLinhasSelecionadas();
+    let corpo;
+    if (linhas.length){
+      corpo = linhas.map(l => {
+        const m = /^(.+?)\s*(?::|\s-\s|\t)\s*(.*)$/.exec(edLimparMarcador(l));
+        const rot = m ? m[1] : edLimparMarcador(l), desc = m ? m[2] : "";
+        return "  @itemLabel(" + edEscaparParens(rot) + ")\n  @item(" + edEscaparParens(desc || "Descrição") + ")";
+      }).join("\n");
+    } else {
+      corpo = "  @itemLabel(Termo)\n  @item(Descrição do termo.)\n  @itemLabel(Outro termo)\n  @item(Outra descrição.)";
+    }
+    edInserirBloco("@definitionList(\n" + corpo + "\n)");
+  },
+
+  table: () => {
+    edGuardarSelecao();
+    const sel = edSelecao().texto;
+    const temDados = /\t|;/.test(sel) && sel.trim().includes("\n");
+    edModal("Tabela",
+      (temDados
+        ? '<p class="dica" style="margin-top:0">O texto selecionado vai virar tabela (colunas separadas por tabulação ou ponto e vírgula — dá para colar direto do Excel).</p>'
+        : '<div class="dupla"><label class="campo">Linhas (sem contar o cabeçalho)<input type="number" id="f-lin" min="1" max="100" value="3"></label>' +
+          '<label class="campo">Colunas<input type="number" id="f-col" min="1" max="20" value="3"></label></div>') +
+      '<label class="check"><input type="checkbox" id="f-cab" checked> Primeira linha é cabeçalho (@rowHead)</label>',
+      (m) => {
+        const cab = m.querySelector("#f-cab").checked;
+        let linhas;
+        if (temDados){
+          const sep = sel.includes("\t") ? "\t" : ";";
+          linhas = sel.split(/\r?\n/).filter(l => l.trim()).map(l => l.split(sep).map(c => c.trim()));
+          const max = Math.max(...linhas.map(l => l.length));
+          linhas = linhas.map(l => { while (l.length < max) l.push(""); return l; });
+        } else {
+          const nl = Math.max(1, Math.min(100, parseInt(m.querySelector("#f-lin").value, 10) || 3));
+          const nc = Math.max(1, Math.min(20, parseInt(m.querySelector("#f-col").value, 10) || 3));
+          linhas = [];
+          if (cab) linhas.push(Array.from({ length: nc }, (_, i) => "Coluna " + (i + 1)));
+          for (let r = 0; r < nl; r++) linhas.push(Array.from({ length: nc }, () => "valor"));
+        }
+        const txt = "@table(\n" + linhas.map((l, i) =>
+          "  @" + (cab && i === 0 ? "rowHead" : "row") + "(" + l.map(c => "@cell(" + edEscaparParens(c) + ")").join(" ") + ")"
+        ).join("\n") + "\n)";
+        edRestaurarSelecao();
+        edInserirBloco(txt);
+      }
+    );
+  },
+
+  longcode: () => {
+    const sel = edSelecao().texto;
+    const codigo = sel || "procedure Exemplo;\nbegin\n  // ...\nend;";
+    const d = edDelimitador(codigo);
+    const antes = "@longCode(" + d + "\n";
+    edInserirBloco(antes + codigo + "\n" + d + ")", antes.length, antes.length + codigo.length);
+  },
+
+  pre: () => {
+    const sel = edSelecao().texto || "texto com espaçamento preservado";
+    edInserirBloco("@preformatted(" + edEscaparParens(sel) + ")", 14, 14 + sel.length);
+  },
+
+  image: () => {
+    edGuardarSelecao();
+    edModal("Imagem",
+      '<label class="campo">Arquivo da imagem<input type="text" class="mono" id="f-img" placeholder="Ex.: imagens/fluxo.png"></label>' +
+      '<p class="dica">Caminho relativo a partir de onde o PasDoc roda. Ele copia a imagem para a pasta de saída da documentação.</p>',
+      (m) => {
+        const f = m.querySelector("#f-img").value.trim();
+        if (!f){ m.querySelector("#f-img").focus(); return false; }
+        edRestaurarSelecao();
+        edInserir("@image(" + f + ")");
+      }
+    );
+  },
+
+  html: () => edEnvolver("@html(", ")", "<em>HTML livre</em>"),
+
+  mais: (btn) => {
+    edGuardarSelecao();
+    const itens = [
+      ["param", "@param(Nome descrição)", "Descreve um parâmetro"],
+      ["returns", "@returns(descrição)", "Descreve o retorno de uma função"],
+      ["raises", "@raises(EExcecao quando…)", "Exceção que pode ser levantada"],
+      ["seealso", "@seeAlso(Identificador)", "Aponta para um item relacionado"],
+      ["abstract", "@abstract(resumo)", "Resumo curto (primeira linha nas listagens)"],
+      ["deprecated", "@deprecated(motivo)", "Marca como obsoleto"],
+      ["author", "@author(Nome)", "Autor"],
+      ["created", "@created(data)", "Data de criação"],
+      ["lastmod", "@lastmod(data)", "Última modificação"],
+      ["noautolink", "@noAutoLink(texto)", "Impede link automático no trecho"],
+      ["exclude", "@exclude", "Esconde o item da documentação"],
+      ["true", "@true / @false / @nil", "Valores formatados"],
+      ["escapar", "@@  @(  @)", "Escapar @ e parênteses da seleção"]
+    ];
+    const pop = edPop(btn,
+      '<div class="mh">Tags de descrição</div>' +
+      itens.map(([id, sint, desc]) => '<button class="mi" data-t="' + id + '"><code>' + edEsc(sint) + "</code><small>" + edEsc(desc) + "</small></button>").join("")
+    );
+    pop.querySelectorAll("[data-t]").forEach(b => b.addEventListener("click", () => {
+      const id = b.getAttribute("data-t");
+      edFecharPop();
+      edRestaurarSelecao();
+      edTagDescricao(id);
+    }));
+  }
+};
+
+function edTagDescricao(id){
+  const sel = edSelecao().texto;
+  switch (id){
+    case "param": return edInserirBloco("@param(" + (sel ? edEscaparParens(sel) : "NomeDoParametro descrição do parâmetro") + ")", 7, 7 + (sel || "NomeDoParametro").length);
+    case "returns": return edInserirBloco("@returns(" + (sel ? edEscaparParens(sel) : "o que a função devolve") + ")", 9, 9 + (sel || "o que a função devolve").length);
+    case "raises": return edInserirBloco("@raises(" + (sel ? edEscaparParens(sel) : "EExcecao quando isso acontece") + ")", 8, 8 + (sel || "EExcecao").length);
+    case "seealso": return edInserirBloco("@seeAlso(" + (sel ? sel.trim() : "Identificador") + ")", 9, 9 + (sel ? sel.trim() : "Identificador").length);
+    case "abstract": return edInserirBloco("@abstract(" + (sel ? edEscaparParens(sel) : "Resumo em uma frase.") + ")", 10, 10 + (sel || "Resumo em uma frase.").length);
+    case "deprecated": return edInserirBloco("@deprecated(" + (sel ? edEscaparParens(sel) : "Use o novo método no lugar.") + ")", 12, 12 + (sel || "Use o novo método no lugar.").length);
+    case "author": return edInserirBloco("@author(" + (sel || "Nome") + ")", 8, 8 + (sel || "Nome").length);
+    case "created": case "lastmod": {
+      const hoje = new Date().toLocaleDateString("pt-BR");
+      return edInserirBloco("@" + id + "(" + hoje + ")");
+    }
+    case "noautolink": return edEnvolver("@noAutoLink(", ")", "texto");
+    case "exclude": return edInserirBloco("@exclude");
+    case "true": return edInserir("@true");
+    case "escapar": {
+      const { texto } = edSelecao();
+      if (!texto){ edToast("Selecione o trecho que deve aparecer literalmente."); return; }
+      return edInserir(texto.replace(/[@()]/g, "@$&"));
+    }
+  }
+}
+
+function edLista(tipo){
+  const linhas = edLinhasSelecionadas().map(edLimparMarcador);
+  const itens = linhas.length ? linhas : ["Primeiro item", "Segundo item", "Terceiro item"];
+  const txt = "@" + tipo + "(\n" + itens.map(i => "  @item(" + edEscaparParens(i) + ")").join("\n") + "\n)";
+  const ini = tipo.length + 11; // posição do texto do primeiro @item
+  edInserirBloco(txt, linhas.length ? undefined : ini, linhas.length ? undefined : ini + itens[0].length);
+}
+
+const ED_ICONES = {
+  code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>',
+  url: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>',
+  anchor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 13a7 7 0 0014 0M8 11h8"/></svg>',
+  ul: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>',
+  ol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1V9M3.5 14.5a1.5 1.5 0 012.6 1c0 .9-2.6 2.2-2.6 3h3"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h9M8 9h12M4 14h9M8 18h12"/></svg>',
+  table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg>',
+  longcode: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 10l-2 2 2 2M15 10l2 2-2 2"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>',
+  br: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 5v7a3 3 0 01-3 3H5M9 11l-4 4 4 4"/></svg>'
+};
+
+const ED_FERRAMENTAS = [
+  ["bold", "<b>B</b>", "Negrito — @bold( )  (Ctrl+B)"],
+  ["italic", '<i style="font-family:Georgia,serif">I</i>', "Itálico — @italic( )  (Ctrl+I)"],
+  ["code", ED_ICONES.code, "Código em linha — @code( )"],
+  ["color", '<span style="display:flex;flex-direction:column;align-items:center;line-height:1"><b>A</b><span class="sw"></span></span>', "Cor do texto ou destaque"],
+  "|",
+  ["section", "<b>H</b>", "Título de seção — @section( )"],
+  ["br", ED_ICONES.br, "Quebra de linha — @br"],
+  "|",
+  ["link", ED_ICONES.link, "Link para unit/classe/método — @link( )  (Ctrl+K)"],
+  ["url", ED_ICONES.url, "Link externo — @url( )"],
+  ["anchor", ED_ICONES.anchor, "Âncora — @anchor( )"],
+  "|",
+  ["ul", ED_ICONES.ul, "Lista com marcadores — @unorderedList( )  (converte as linhas selecionadas)"],
+  ["ol", ED_ICONES.ol, "Lista numerada — @orderedList( )  (converte as linhas selecionadas)"],
+  ["dl", ED_ICONES.dl, "Lista de definições — @definitionList( )"],
+  ["table", ED_ICONES.table, "Tabela — @table( )  (converte texto colado do Excel)"],
+  "|",
+  ["longcode", ED_ICONES.longcode, "Bloco de código Pascal — @longCode( )"],
+  ["pre", '<span style="font-family:var(--mono);font-size:11.5px">pre</span>', "Texto pré-formatado — @preformatted( )"],
+  ["image", ED_ICONES.image, "Imagem — @image( )"],
+  ["html", '<span style="font-family:var(--mono);font-size:11.5px">&lt;/&gt;</span>', "HTML livre — @html( )"],
+  "|",
+  ["mais", '<span style="font-size:12.5px">Mais tags</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M6 9l6 6 6-6"/></svg>', "@param, @returns, @raises, @seeAlso, @deprecated…"]
+];
+
+function edMontarFerramentas(){
+  const barra = $ed("pd-ed-tools");
+  barra.innerHTML = ED_FERRAMENTAS.map(f => f === "|"
+    ? '<span class="pd-tool-sep" aria-hidden="true"></span>'
+    : '<button class="pd-tool" type="button" data-acao="' + f[0] + '" title="' + edEsc(f[2]) + '" aria-label="' + edEsc(f[2]) + '">' + f[1] + "</button>"
+  ).join("");
+  const sw = barra.querySelector('[data-acao="color"] .sw');
+  if (sw) sw.style.background = edPrefs().ultimaCor || "#c62828";
+  barra.addEventListener("mousedown", (e) => { if (e.target.closest(".pd-tool")) e.preventDefault(); }); // não tira o foco/seleção do texto
+  barra.addEventListener("click", (e) => {
+    const b = e.target.closest(".pd-tool");
+    if (!b) return;
+    const fn = ED_ACOES[b.getAttribute("data-acao")];
+    if (fn) fn(b);
+  });
+}
+
+function edAjuda(){
+  const linhas = [
+    ["@bold(texto)", "Negrito"], ["@italic(texto)", "Itálico"], ["@code(Nome)", "Código em linha"],
+    ["@html(&lt;span style=\"color:#c62828\"&gt;)texto@html(&lt;/span&gt;)", "Cor (via HTML — só na saída HTML)"],
+    ["@section(1 Ancora Título)", "Título de seção (nível 1 a 3)"], ["@br", "Quebra de linha"],
+    ["linha em branco", "Novo parágrafo"],
+    ["@link(TClasse.Metodo texto)", "Link para item documentado"], ["@url(https://… texto)", "Link externo"],
+    ["@anchor(Nome)", "Âncora"],
+    ["@unorderedList( @item(a) @item(b) )", "Lista com marcadores"], ["@orderedList( @item(a) )", "Lista numerada"],
+    ["@definitionList( @itemLabel(T) @item(D) )", "Lista de definições"],
+    ["@table( @rowHead(@cell(A) @cell(B)) @row(@cell(1) @cell(2)) )", "Tabela"],
+    ["@longCode(# código #)", "Bloco de código Pascal"], ["@preformatted(texto)", "Texto pré-formatado"],
+    ["@image(arquivo.png)", "Imagem"], ["@@  @(  @)", "Escrever @ ou parênteses literalmente"]
+  ];
+  edModal("Referência rápida — tags PasDoc",
+    '<div class="ref"><table>' + linhas.map(l => "<tr><td>" + l[0] + "</td><td>" + l[1] + "</td></tr>").join("") + "</table>" +
+    "<h4>Como usar o arquivo no fonte</h4>" +
+    "<p>Salve o .txt e referencie no comentário de documentação da unit ou da classe:</p>" +
+    "<p><code>{ @include(" + edEsc(ed.nome || "MinhaUnit.txt") + ") }</code></p>" +
+    "<p>O caminho é relativo à pasta do fonte (ou às pastas passadas ao PasDoc com <code>--include</code>). O botão <b>Copiar @include</b> copia essa linha já com o nome do arquivo aberto.</p>" +
+    "<h4>Dentro de tags, parênteses precisam fechar</h4>" +
+    "<p>Os botões já escapam parênteses soltos do texto selecionado. Se digitar à mão, use <code>@(</code> e <code>@)</code> para parênteses isolados e <code>@@</code> para um @ literal (ex.: e-mails).</p>" +
+    "<h4>Atalhos</h4>" +
+    "<p>Ctrl+B negrito · Ctrl+I itálico · Ctrl+K link · Ctrl+S salvar · Ctrl+Shift+S salvar como · Ctrl+O abrir</p></div>",
+    null, { largo: true }
+  );
+}
+
+function edMostrarAvisos(){
+  if (!ed.diag.length) return;
+  const ta = edTa();
+  const pop = edPop($ed("pd-ed-avisos"),
+    '<div class="mh">Avisos de sintaxe PasDoc — clique para ir até o ponto</div>' +
+    ed.diag.slice(0, 60).map((d, i) => {
+      const ln = ta.value.slice(0, d.pos).split("\n").length;
+      return '<button class="mi" data-i="' + i + '">Linha ' + ln + "<small>" + edEsc(d.msg) + "</small></button>";
+    }).join("")
+  );
+  const r = $ed("pd-ed-avisos").getBoundingClientRect();
+  pop.style.top = Math.max(8, r.top - pop.offsetHeight - 6) + "px";
+  pop.querySelectorAll("[data-i]").forEach(b => b.addEventListener("click", () => {
+    const d = ed.diag[+b.getAttribute("data-i")];
+    edFecharPop();
+    ta.focus();
+    const fimTag = (/^@[A-Za-z0-9_]*/.exec(ta.value.slice(d.pos)) || [""])[0].length || 1;
+    ta.setSelectionRange(d.pos, d.pos + fimTag);
+    const linhaPx = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+    ta.scrollTop = Math.max(0, (ta.value.slice(0, d.pos).split("\n").length - 4) * linhaPx);
+    edAtualizarPosicao();
+  }));
+}
+
+function edDefinirModo(modo){
+  $ed("pd-ed-body").setAttribute("data-modo", modo);
+  document.querySelectorAll("#pd-ed-modo button").forEach(b => b.classList.toggle("on", b.getAttribute("data-modo") === modo));
+  edSalvarPrefs({ modo });
+  if (modo !== "preview") edRealce();
+}
+
+/* ---------------------------- Mostrar / esconder o editor ---------------------------- */
+
+function edAtivo(){ return document.getElementById("view-editor").classList.contains("active"); }
+
+async function abrirEditor(){
+  if (edAtivo()) return;
+  ed.viewAnterior = document.getElementById("view-doc").classList.contains("active") ? "doc" : "home";
+  document.getElementById("view-home").classList.add("hidden");
+  document.getElementById("view-doc").classList.remove("active");
+  document.getElementById("view-editor").classList.add("active");
+  $ed("pd-btn-editor").classList.add("on");
+  if (!ed.iniciado) await edIniciar();
+  edNomesDoc = null;
+  edCarregarCssDaPasta();
+  edRealce();
+  edRenderPreview();
+  edAtualizarCabecalho();
+  edTa().focus();
+}
+
+function fecharEditor(destino){
+  document.getElementById("view-editor").classList.remove("active");
+  $ed("pd-btn-editor").classList.remove("on");
+  edFecharPop();
+  document.title = "PerpetualDoc";
+  if ((destino || ed.viewAnterior) === "doc" && currentPath){
+    document.getElementById("view-doc").classList.add("active");
+  } else {
+    mostrarViewHome();
+  }
+}
+
+function edAoTrocarTema(){
+  if (ed.iniciado) edAplicarCssPreview();
+}
+
+async function edIniciar(){
+  ed.iniciado = true;
+  const prefs = edPrefs();
+  ed.enc = prefs.encNovo;
+  ed.eol = prefs.eolNovo;
+  edMontarFerramentas();
+  edDefinirModo(prefs.modo || "split");
+
+  // Pré-visualização: iframe isolado (sem scripts), atualizado só no conteúdo pra não perder a rolagem.
+  const frame = $ed("pd-ed-preview");
+  await new Promise((resolve) => {
+    frame.addEventListener("load", () => resolve(), { once: true });
+    frame.srcdoc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><style id="pd-css"></style></head><body><div id="pd-root"></div></body></html>';
+  });
+  ed.previewPronto = true;
+  edAplicarCssPreview();
+
+  // Recupera o rascunho e o arquivo da última sessão.
+  let rasc = null;
+  try { rasc = JSON.parse(localStorage.getItem(ED_DRAFT_KEY) || "null"); } catch(e){ rasc = null; }
+  if (rasc && typeof rasc.texto === "string"){
+    const h = await edCarregarHandle();
+    ed.nome = rasc.nome || "";
+    ed.enc = rasc.enc || ed.enc;
+    ed.eol = rasc.eol || ed.eol;
+    ed.handle = h && rasc.nome && h.name === rasc.nome ? h : null;
+    edDefinirTexto(rasc.texto);
+    ed.sujo = !!rasc.sujo;
+  }
+  edAtualizarCabecalho();
+
+  const ta = edTa();
+  ta.addEventListener("input", edAoEditar);
+  ta.addEventListener("scroll", () => { $ed("pd-ed-hl").scrollTop = ta.scrollTop; });
+  ["click", "keyup", "select"].forEach(ev => ta.addEventListener(ev, edAtualizarPosicao));
+  ta.addEventListener("keydown", (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    const k = e.key.toLowerCase();
+    if (ctrl && !e.shiftKey && k === "b"){ e.preventDefault(); ED_ACOES.bold(); }
+    else if (ctrl && !e.shiftKey && k === "i"){ e.preventDefault(); ED_ACOES.italic(); }
+    else if (ctrl && !e.shiftKey && k === "k"){ e.preventDefault(); ED_ACOES.link(); }
+    else if (e.key === "Tab" && !ctrl && !e.altKey){
+      e.preventDefault();
+      if (!e.shiftKey) edInserir("  ");
+    }
+  });
+
+  // Arrastar um .txt para dentro do editor abre o arquivo (mantendo o vínculo pra sobrescrever).
+  const src = $ed("pd-ed-src");
+  src.addEventListener("dragover", (e) => {
+    if (![...e.dataTransfer.types].includes("Files")) return;
+    e.preventDefault();
+    src.classList.add("arrastando");
+  });
+  src.addEventListener("dragleave", (e) => { if (!src.contains(e.relatedTarget)) src.classList.remove("arrastando"); });
+  src.addEventListener("drop", async (e) => {
+    if (![...e.dataTransfer.types].includes("Files")) return;
+    e.preventDefault();
+    src.classList.remove("arrastando");
+    const item = [...e.dataTransfer.items].find(i => i.kind === "file");
+    if (!item) return;
+    if (typeof item.getAsFileSystemHandle === "function"){
+      const h = await item.getAsFileSystemHandle();
+      if (h && h.kind === "file") edAbrir(h);
+    } else {
+      edToast("Este navegador não permite abrir arquivos arrastados para edição. Use o botão Abrir…", true);
+    }
+  });
+
+  $ed("pd-ed-voltar").addEventListener("click", () => fecharEditor());
+  $ed("pd-ed-novo").addEventListener("click", edNovo);
+  $ed("pd-ed-abrir").addEventListener("click", () => edAbrir());
+  $ed("pd-ed-salvar").addEventListener("click", () => edSalvar(false));
+  $ed("pd-ed-salvarcomo").addEventListener("click", () => edSalvar(true));
+  $ed("pd-ed-ajuda").addEventListener("click", edAjuda);
+  $ed("pd-ed-avisos").addEventListener("click", edMostrarAvisos);
+  $ed("pd-ed-include").addEventListener("click", async () => {
+    const linha = "{ @include(" + (ed.nome || "arquivo.txt") + ") }";
+    try { await navigator.clipboard.writeText(linha); edToast("Copiado: " + linha); }
+    catch(e){ edToast("Não foi possível copiar. Linha: " + linha, true); }
+  });
+  document.querySelectorAll("#pd-ed-modo button").forEach(b => b.addEventListener("click", () => edDefinirModo(b.getAttribute("data-modo"))));
+  $ed("pd-ed-enc").addEventListener("change", (e) => {
+    ed.enc = e.target.value;
+    edSalvarPrefs({ encNovo: ed.enc });
+    if (edTa().value){ ed.sujo = true; }
+    edAtualizarCabecalho();
+    edSalvarRascunho();
+  });
+  $ed("pd-ed-eol").addEventListener("change", (e) => {
+    ed.eol = e.target.value;
+    edSalvarPrefs({ eolNovo: ed.eol });
+    if (edTa().value){ ed.sujo = true; }
+    edAtualizarCabecalho();
+    edSalvarRascunho();
+  });
+
+  // Modal: clique fora, botões, Enter/Escape.
+  const bg = $ed("pd-modal-bg");
+  bg.addEventListener("mousedown", (e) => { if (e.target === bg) edFecharModal(); });
+  bg.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-acao]");
+    if (!a) return;
+    if (a.getAttribute("data-acao") === "ok") edConfirmarModal();
+    else edFecharModal();
+  });
+  bg.addEventListener("keydown", (e) => {
+    if (e.key === "Escape"){ e.stopPropagation(); edFecharModal(); }
+    else if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); edConfirmarModal(); }
+  });
+
+  document.addEventListener("mousedown", (e) => {
+    if (edPopAtual && !edPopAtual.contains(e.target) && !e.target.closest(".pd-tool, #pd-ed-avisos")) edFecharPop();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && edPopAtual){ edFecharPop(); edRestaurarSelecao(); }
+  });
+  window.addEventListener("resize", edFecharPop);
+}
+
+document.getElementById("pd-btn-editor").addEventListener("click", () => {
+  if (edAtivo()) fecharEditor();
+  else abrirEditor();
+});
+
+// Atalhos do editor que valem mesmo com o foco fora do texto.
+document.addEventListener("keydown", (e) => {
+  if (!edAtivo() || !$ed("pd-modal-bg").hidden) return;
+  const ctrl = e.ctrlKey || e.metaKey;
+  const k = e.key.toLowerCase();
+  if (ctrl && k === "s"){ e.preventDefault(); edSalvar(e.shiftKey); }
+  else if (ctrl && !e.shiftKey && k === "o"){ e.preventDefault(); edAbrir(); }
+});
+
+window.addEventListener("beforeunload", (e) => {
+  if (ed.iniciado && ed.sujo){ edSalvarRascunho(); e.preventDefault(); e.returnValue = ""; }
+});
 
 /* ---------------------------- Inicialização ---------------------------- */
 
