@@ -1690,6 +1690,7 @@ async function indexarERenderizar(){
       total + " documentação(ões) indexada(s)" + (usouIndiceJson ? " (via índice pré-gerado)" : "") + ". Busca sem acento, por nome e conteúdo. Nada sai deste navegador.";
     atualizarPillPasta();
     atualizarBotaoGuias();
+    descobrirCaminhoRaiz(); // em segundo plano: tenta achar o caminho da pasta nos .bat da raiz
     document.getElementById("pd-search-input").value = "";
     executarBusca("");
     document.getElementById("pd-search-input").focus();
@@ -1718,6 +1719,7 @@ function atualizarPillPasta(){
     fileMap = new Map();
     docItems = [];
     guiasItems = [];
+    caminhoRaizDescoberto = null;
     mostrarViewHome();
     atualizarBotaoGuias();
     renderConnectScreen("initial");
@@ -2794,7 +2796,7 @@ async function edCaminhoAutomatico(handle){
     try {
       const partes = await rootHandle.resolve(handle);
       if (partes){
-        const base = (edPrefs().basesRaiz || {})[rootHandle.name];
+        const base = caminhoRaizConhecido();
         if (base) return { caminho: edJuntarCaminho(base, partes) };
         const viaPrincipal = await edCaminhoPorBases(handle); // a pasta principal (ex.: SVN) já contém a documentação
         return viaPrincipal ? { caminho: viaPrincipal } : { faltaRaiz: partes };
@@ -2812,12 +2814,58 @@ function edCaminhoParaFileUrl(caminho){
   return "file:///" + cod(p);
 }
 
+/* Caminho da pasta conectada no disco, sem perguntar: procura nos .bat/.cmd da
+   raiz (ex.: geraDocs.bat) um caminho absoluto que passe por uma pasta com o
+   mesmo nome da conectada E cujo próximo trecho exista de verdade dentro dela
+   (ex.: D:\SVN\trunk\pasdoc\proj\... com "proj" na raiz). Isso evita pegar
+   caminhos de outras pastas com o mesmo nome (como a instalação do PasDoc).
+   O caminho digitado pelo usuário sempre tem prioridade. */
+let caminhoRaizDescoberto = null; // { caminho, origem }
+
+async function descobrirCaminhoRaiz(){
+  caminhoRaizDescoberto = null;
+  if (!rootHandle) return;
+  const raiz = rootHandle;
+  const nome = raiz.name.trim().toLowerCase();
+  const topo = new Set([...fileMap.keys()].map(p => p.split("/")[0].trim().toLowerCase()));
+  const scripts = [...fileMap.keys()].filter(p => !p.includes("/") && /\.(bat|cmd)$/i.test(p));
+  const contagem = new Map();
+  for (const arq of scripts){
+    let txt;
+    try { txt = await lerComoTexto(await fileMap.get(arq).getFile()); } catch(e) { continue; }
+    const achados = txt.match(/(?:[a-zA-Z]:\\|\\\\[^\\\s"']+\\)[^"'\r\n<>|*?%=]*/g) || [];
+    for (const m of achados){
+      const segs = m.split("\\").map(x => x.trim());
+      for (let i = 0; i < segs.length - 1; i++){
+        if (segs[i].toLowerCase() !== nome) continue;
+        const prox = segs[i + 1].split(/\s/)[0].toLowerCase(); // corta argumentos colados depois de espaço
+        if (!prox || !topo.has(prox)) continue;
+        const cam = segs.slice(0, i + 1).join("\\");
+        const k = cam.toLowerCase();
+        const atual = contagem.get(k) || { caminho: cam, origem: arq, n: 0 };
+        atual.n++;
+        contagem.set(k, atual);
+      }
+    }
+  }
+  if (rootHandle !== raiz) return; // trocou de pasta no meio da leitura
+  let melhor = null;
+  for (const c of contagem.values()) if (!melhor || c.n > melhor.n) melhor = c;
+  caminhoRaizDescoberto = melhor ? { caminho: melhor.caminho, origem: melhor.origem } : null;
+}
+
+/** Caminho da pasta conectada: o informado pelo usuário ou, se não houver, o descoberto. */
+function caminhoRaizConhecido(){
+  if (!rootHandle) return null;
+  return (edPrefs().basesRaiz || {})[rootHandle.name] || (caminhoRaizDescoberto && caminhoRaizDescoberto.caminho) || null;
+}
+
 /** Caminho de uma pasta escolhida no seletor, deduzido sem perguntar nada:
  *  quando ela contém (ou está dentro de) uma pasta cujo caminho já é conhecido
  *  — a pasta de documentação conectada ou uma pasta principal já configurada. */
 async function edDerivarCaminhoPasta(dir){
   const conhecidas = [];
-  const raizCam = rootHandle ? (edPrefs().basesRaiz || {})[rootHandle.name] : null;
+  const raizCam = caminhoRaizConhecido();
   if (raizCam) conhecidas.push({ handle: rootHandle, caminho: raizCam });
   for (const b of await edCarregarBases()) conhecidas.push(b);
   const minus = (a) => a.map(x => x.toLowerCase()).join("/");
@@ -2903,7 +2951,8 @@ function edLigarEscolher(m, campoId, opcoes){
     if (auto && auto.faltaRaiz){
       st.modo = "raiz"; st.partes = auto.faltaRaiz;
       txt.innerHTML = "<b>" + edEsc(h.name) + "</b> está na pasta de documentação <b>" + edEsc(rootHandle.name) +
-        "</b>. O navegador não revela caminhos do disco, então informe o caminho dessa pasta <b>uma única vez</b>; daqui pra frente é automático.";
+        "</b>. O navegador não revela caminhos do disco e o caminho dessa pasta não apareceu em nenhum .bat da raiz dela, então informe-o <b>uma única vez</b> " +
+        "(no Explorer: abra a pasta, clique na barra de endereço e copie). Daqui pra frente é automático, inclusive no Copiar @include.";
       caixa.querySelector(".pd-onde-rot").textContent = "Caminho completo da pasta " + rootHandle.name;
       pasta.placeholder = "Ex.: D:\\SVN\\trunk\\" + rootHandle.name;
       pasta.value = "";
@@ -3022,7 +3071,7 @@ async function edCaminhoCompleto(perguntar, forcarPergunta){
   const partes = await edPartesNaRaiz();
   if (partes){
     const bases = prefs.basesRaiz || {};
-    let base = bases[rootHandle.name];
+    let base = bases[rootHandle.name] || (forcarPergunta ? null : caminhoRaizConhecido());
     if (!base && !forcarPergunta){
       const viaPrincipal = await edCaminhoPorBases(ed.handle);
       if (viaPrincipal) return viaPrincipal;
@@ -3032,7 +3081,7 @@ async function edCaminhoCompleto(perguntar, forcarPergunta){
       base = await edPerguntarPasta("Onde fica a pasta conectada?",
         "O navegador não informa caminhos do disco. O arquivo <b>" + edEsc(ed.handle.name) + "</b> está dentro da pasta conectada <b>" + edEsc(rootHandle.name) +
         "</b> — informe o caminho completo dessa pasta e o resto (<code>" + edEsc(partes.join("\\")) + "</code>) é completado automaticamente.",
-        base || "", "Ex.: D:\\SVN\\trunk\\" + rootHandle.name);
+        bases[rootHandle.name] || caminhoRaizConhecido() || "", "Ex.: D:\\SVN\\trunk\\" + rootHandle.name);
       if (!base) return null;
       bases[rootHandle.name] = base;
       edSalvarPrefs({ basesRaiz: bases });
