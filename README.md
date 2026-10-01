@@ -43,12 +43,12 @@ Da próxima vez que abrir o site no mesmo navegador, ele lembra da pasta — só
    Links externos da documentação sempre abrem em outra aba; links internos navegam dentro do visualizador e âncoras rolam até o ponto certo.
 5. O ícone de sol/lua alterna entre o visual original (claro) e um tema escuro aplicado por cima (opcional).
 6. Se a pasta de documentação for atualizada (nova branch, novos fontes), use o botão de reescanear ao lado de "Trocar pasta".
-7. Use **Editor TXT** (no topo) para escrever complementos de documentação em `.txt` com tags do PasDoc — veja abaixo.
+7. Use **Criar/editar documentação detalhada** (no topo) para escrever complementos de documentação em `.txt` com tags do PasDoc — veja abaixo.
 8. O botão **Guias** (no topo) abre os HTMLs de apoio que ficam soltos na **raiz da pasta de documentação** (fora das pastas de projeto), como `help-insight-delphi-seattle.html` e `pasdoc-tags.html`. Eles não fazem parte do site: são lidos da pasta conectada, pela lista `guias` do `_perpetualdoc_index.json` ou, se o JSON não tiver essa lista, pela leitura direta da raiz. Qualquer outro `.html` colocado na raiz aparece no menu automaticamente. Dentro do guia dá pra alternar entre eles, abrir em outra aba e voltar pra onde estava; o tema claro/escuro do site é aplicado pelo próprio CSS do guia.
 
-## Editor TXT (complementos via @include)
+## Criar/editar documentação detalhada (complementos via @include)
 
-O botão **Editor TXT** abre um editor de texto com botões que inserem as tags do PasDoc (`@bold`, `@italic`, `@code`, `@section`, `@link`, `@url`, listas, `@table`, `@longCode`, `@image`, `@param`, `@returns`…) e uma pré-visualização ao lado. O arquivo gerado é um `.txt` puro, pronto para ser referenciado no comentário de uma unit ou classe:
+O botão **Criar/editar documentação detalhada** abre um editor de texto com botões que inserem as tags do PasDoc (`@bold`, `@italic`, `@code`, `@section`, `@link`, `@url`, listas, `@table`, `@longCode`, `@image`, `@param`, `@returns`…) e uma pré-visualização ao lado. O arquivo gerado é um `.txt` puro, pronto para ser referenciado no comentário de uma unit ou classe:
 
 ```pascal
 { @include(MinhaUnit.txt) }
@@ -56,6 +56,7 @@ O botão **Editor TXT** abre um editor de texto com botões que inserem as tags 
 
 - **Salvar** sobrescreve o arquivo aberto sem perguntar o local; se for um arquivo novo, pergunta onde gravar. **Salvar como…** sempre pergunta.
 - **Abrir…** (ou arrastar um `.txt` para o editor) carrega um arquivo existente para edição.
+- **Imagem** e **Link externo** têm o botão **Procurar…**: escolha o arquivo e o caminho completo é preenchido sozinho (no link, vira `file:///…`). Como o navegador não revela caminhos do disco, para arquivos dentro da pasta de documentação basta informar uma vez o caminho dela (o mesmo do @include); para arquivos fora, informa-se a pasta do arquivo e, marcando *Lembrar esta pasta*, tudo dentro dela (e das subpastas) passa a ser preenchido sozinho.
 - **Copiar @include** copia a linha `{ @include(<caminho completo>) }`. O navegador não revela caminhos do disco, então na primeira vez ele pergunta onde fica a pasta de documentação conectada (ou a pasta do arquivo, se ele estiver fora dela) e completa o resto sozinho. Se o arquivo ainda não foi salvo, ele oferece salvar na hora e já copia a linha.
 - Na pré-visualização, clicar num `@link` abre a página correspondente da documentação em outra aba; âncoras aparecem marcadas (na documentação final elas são invisíveis) e imagens encontradas na pasta conectada são exibidas.
 - A codificação é detectada ao abrir (ANSI/Windows-1252 ou UTF-8) e mantida ao salvar; para arquivos novos, o padrão é ANSI com quebra de linha CRLF, igual aos fontes Delphi. Dá para trocar na barra inferior.
@@ -68,10 +69,10 @@ Assim como o resto do site, o editor não envia nada para a internet: ele só l�
 
 ## Instalar como aplicativo
 
-No Chrome ou no Edge, o PerpetualDoc pode ser instalado como aplicativo: abre em janela própria (sem barra de endereço nem abas), ganha ícone na área de trabalho, no menu Iniciar e na barra de tarefas, e funciona com todos os recursos do site — busca, documentação, Guias e Editor TXT.
+No Chrome ou no Edge, o PerpetualDoc pode ser instalado como aplicativo: abre em janela própria (sem barra de endereço nem abas), ganha ícone na área de trabalho, no menu Iniciar e na barra de tarefas, e funciona com todos os recursos do site — busca, documentação, Guias e criação/edição de documentação detalhada.
 
 - Clique em **Instalar app** no topo do site (o botão aparece quando o navegador oferece a instalação), ou use o ícone de instalar na barra de endereço / menu do navegador → *Instalar PerpetualDoc*.
-- Clicando com o botão direito no ícone do app, há o atalho **Editor TXT**, que já abre direto no editor.
+- Clicando com o botão direito no ícone do app, há o atalho **Documentação detalhada**, que já abre direto no editor.
 - O app usa a mesma pasta conectada do site (mesma origem), então não precisa selecionar de novo. No app instalado, o Chrome/Edge costuma oferecer **"Permitir em todas as visitas"** ao confirmar a pasta, o que elimina o clique de confirmação a cada abertura.
 - Atualizações são automáticas: com internet, o app sempre carrega a versão publicada. Sem internet, abre com a última versão baixada (só os arquivos do site ficam guardados; a documentação continua sendo lida da pasta, nunca copiada).
 

@@ -237,6 +237,11 @@
 
   /* ---------- editor TXT (PasDoc) ---------- */
   .pd-btn-editor{ display:flex; align-items:center; gap:7px; }
+  .pd-btn-editor .rot-curto{ display:none; }
+  @media (max-width:1280px){
+    .pd-btn-editor .rot-longo{ display:none; }
+    .pd-btn-editor .rot-curto{ display:inline; }
+  }
   .pd-btn-editor.on{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
 
   #view-editor{ flex:1; display:none; flex-direction:column; min-height:0; }
@@ -409,6 +414,14 @@
   .pd-modal .dica{ font-size:12px; color:var(--text-faint); margin:-6px 0 12px; line-height:1.45; }
   .pd-modal .dupla{ display:flex; gap:12px; }
   .pd-modal .dupla > *{ flex:1; }
+  .pd-modal .pd-linha-arq{ display:flex; gap:8px; margin-top:5px; align-items:stretch; }
+  .pd-modal .pd-linha-arq input[type=text]{ margin-top:0 !important; flex:1; min-width:0; }
+  .pd-modal .pd-linha-arq .pd-btn{ white-space:nowrap; flex-shrink:0; }
+  .pd-modal .pd-onde{ border-left:2px solid var(--accent); padding:2px 0 2px 12px; margin:-2px 0 12px; }
+  .pd-modal .pd-onde .dica{ margin:0 0 8px; }
+  .pd-modal .pd-onde .check{ align-items:flex-start; font-size:12.5px; margin-bottom:4px; }
+  .pd-modal .pd-onde .check input{ margin-top:3px; }
+  .pd-modal .pd-onde .check[hidden]{ display:none; }
   .pd-modal .check{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); margin-bottom:12px; }
   .pd-modal .acoes{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
   .pd-modal .acoes .pd-btn.primary{ background:var(--accent); border-color:var(--accent); color:#1a1206; font-weight:600; }
@@ -433,7 +446,7 @@
   @media (max-width:900px){
     .pd-edbody[data-modo="split"]{ flex-direction:column; }
     .pd-edbody[data-modo="split"] .pd-edsrc{ border-right:0; border-bottom:1px solid var(--border); }
-    .pd-btn-editor span{ display:none; }
+    .pd-btn-editor span, .pd-btn-editor .rot-curto{ display:none; }
     .pd-btn-guias span{ display:none; }
     .pd-btn-instalar span{ display:none; }
   }
@@ -458,9 +471,9 @@
       <div class="pd-brand-sub" id="pd-folder-label"></div>
     </div>
     <div class="pd-topline-right">
-      <button class="pd-btn pd-btn-editor" id="pd-btn-editor" title="Criar ou editar um TXT de documentação PasDoc (para usar com @include)">
+      <button class="pd-btn pd-btn-editor" id="pd-btn-editor" title="Criar/editar documentação detalhada: TXT com tags do PasDoc, usado com @include">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
-        <span>Editor TXT</span>
+        <span class="rot-longo">Criar/editar documentação detalhada</span><span class="rot-curto">Documentação detalhada</span>
       </button>
       <button class="pd-btn pd-btn-guias" id="pd-btn-guias" title="Guias que estão na raiz da pasta de documentação" aria-haspopup="menu" aria-expanded="false" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h7M9 11h5"/></svg>
@@ -2488,17 +2501,19 @@ function edRenderPreview(){
 
 const edUrlsImagem = new Map(); // caminho -> blob URL (reaproveitado entre atualizações)
 async function edResolverImagens(raiz){
-  if (!fileMap.size) return;
+  if (!fileMap.size && !edArquivosEscolhidos.size) return;
   for (const el of raiz.querySelectorAll("[data-arquivo]")){
     const arq = el.getAttribute("data-arquivo").replace(/\\/g, "/");
     const alvo = nameOf(arq).toLowerCase();
     if (!alvo) continue;
-    const caminho = fileMap.has(arq) ? arq : [...fileMap.keys()].find(p => nameOf(p).toLowerCase() === alvo);
+    const escolhido = edArquivosEscolhidos.get(edNormCaminho(arq));
+    const caminho = escolhido ? "escolhido:" + edNormCaminho(arq)
+      : fileMap.has(arq) ? arq : [...fileMap.keys()].find(p => nameOf(p).toLowerCase() === alvo);
     if (!caminho) continue;
     try {
       let url = edUrlsImagem.get(caminho);
       if (!url){
-        url = URL.createObjectURL(await fileMap.get(caminho).getFile());
+        url = URL.createObjectURL(await (escolhido || fileMap.get(caminho)).getFile());
         edUrlsImagem.set(caminho, url);
       }
       if (!el.isConnected) continue;
@@ -2718,6 +2733,198 @@ async function edNovo(){
   edTa().focus();
 }
 
+/* ---------------------------- Escolher arquivo do disco (imagem / link de arquivo) ----------------------------
+   O navegador entrega o arquivo escolhido, mas nunca o caminho dele no disco.
+   O caminho completo é montado sozinho quando o arquivo está:
+   - dentro da pasta de documentação conectada (o caminho dela é informado uma vez, o mesmo do @include);
+   - dentro de uma "pasta lembrada" (informada uma vez e confirmada no seletor de pastas).
+   Fora disso, pede-se a pasta do arquivo uma única vez e, se o usuário quiser,
+   ela passa a ser lembrada para os próximos. Tudo fica só neste navegador. */
+
+const DB_KEY_BASES = "basesCaminho";
+const edArquivosEscolhidos = new Map(); // caminho normalizado -> FileSystemFileHandle (para a prévia)
+
+function edNormCaminho(c){ return String(c).replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase(); }
+
+async function edCarregarBases(){
+  try {
+    const db = await openDb();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, "readonly");
+      const req = tx.objectStore(DB_STORE).get(DB_KEY_BASES);
+      req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+      req.onerror = () => resolve([]);
+    });
+  } catch(e){ return []; }
+}
+async function edSalvarBase(handle, caminho){
+  const bases = await edCarregarBases();
+  const novas = [];
+  for (const b of bases){
+    let mesma = false;
+    try { mesma = await b.handle.isSameEntry(handle); } catch(e) { /* handle antigo inválido: descarta */ continue; }
+    if (!mesma) novas.push(b);
+  }
+  novas.push({ handle, caminho });
+  const db = await openDb();
+  await new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, "readwrite");
+    tx.objectStore(DB_STORE).put(novas, DB_KEY_BASES);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+
+/** Caminho completo via pastas lembradas (sem perguntar nada), ou null. */
+async function edCaminhoPorBases(handle){
+  for (const b of await edCarregarBases()){
+    try {
+      const partes = await b.handle.resolve(handle);
+      if (partes) return edJuntarCaminho(b.caminho, partes);
+    } catch(e) { /* pasta lembrada inacessível: tenta a próxima */ }
+  }
+  return null;
+}
+
+/** { caminho } quando dá pra montar sozinho; { faltaRaiz: partes } quando o arquivo
+ *  está na pasta conectada mas o caminho dela ainda não foi informado; ou null. */
+async function edCaminhoAutomatico(handle){
+  if (rootHandle && typeof rootHandle.resolve === "function"){
+    try {
+      const partes = await rootHandle.resolve(handle);
+      if (partes){
+        const base = (edPrefs().basesRaiz || {})[rootHandle.name];
+        return base ? { caminho: edJuntarCaminho(base, partes) } : { faltaRaiz: partes };
+      }
+    } catch(e) { /* segue para as pastas lembradas */ }
+  }
+  const viaBase = await edCaminhoPorBases(handle);
+  return viaBase ? { caminho: viaBase } : null;
+}
+
+function edCaminhoParaFileUrl(caminho){
+  const p = String(caminho).replace(/\\/g, "/");
+  const cod = (txt) => txt.split("/").map(seg => /^[a-zA-Z]:$/.test(seg) ? seg : encodeURIComponent(seg)).join("/");
+  if (p.startsWith("//")) return "file://" + cod(p.slice(2)); // \\servidor\compartilhamento
+  return "file:///" + cod(p);
+}
+
+/** Campo de caminho com botão "Procurar…" (+ área para informar a pasta, quando preciso). */
+function edHtmlEscolher(id, rotulo, placeholder, valor){
+  return '<label class="campo">' + edEsc(rotulo) +
+      '<span class="pd-linha-arq"><input type="text" class="mono" id="' + id + '" value="' + edEsc(valor || "") + '" placeholder="' + edEsc(placeholder) + '">' +
+      '<button type="button" class="pd-btn" data-procurar>Procurar…</button></span></label>' +
+    '<div class="pd-onde" hidden>' +
+      '<p class="dica pd-onde-txt"></p>' +
+      '<label class="campo"><span class="pd-onde-rot"></span><input type="text" class="mono pd-onde-pasta"></label>' +
+      '<label class="check pd-onde-lembrar-l"><input type="checkbox" class="pd-onde-lembrar" checked>' +
+        "<span>Lembrar esta pasta: arquivos dentro dela e das subpastas terão o caminho preenchido sozinho (o navegador vai pedir para confirmar a pasta)</span></label>" +
+    "</div>";
+}
+
+/** Liga o "Procurar…" de um modal. Devolve { validar(), concluir() } para o OK do modal. */
+function edLigarEscolher(m, campoId, opcoes){
+  const campo = m.querySelector("#" + campoId);
+  const onde = m.querySelector(".pd-onde");
+  const pasta = onde.querySelector(".pd-onde-pasta");
+  const lembrarL = onde.querySelector(".pd-onde-lembrar-l");
+  const st = { handle: null, modo: null, partes: null, caminho: null };
+
+  const limparPasta = (v) => v.trim().replace(/^"|"$/g, "").replace(/[\\/]+$/, "");
+  const atualizar = () => {
+    if (!st.handle || !st.modo) return;
+    const v = limparPasta(pasta.value);
+    st.caminho = v ? edJuntarCaminho(v, st.modo === "raiz" ? st.partes : [st.handle.name]) : null;
+    campo.value = st.caminho ? opcoes.formatar(st.caminho) : "";
+  };
+  pasta.addEventListener("input", atualizar);
+  // Digitou no campo principal: vale o que foi digitado, esquece o arquivo escolhido.
+  campo.addEventListener("input", () => { st.handle = null; st.modo = null; st.caminho = null; onde.hidden = true; });
+
+  m.querySelector("[data-procurar]").addEventListener("click", async () => {
+    if (typeof window.showOpenFilePicker !== "function"){ edToast("Este navegador não permite escolher arquivos. Use Chrome ou Edge.", true); return; }
+    let h;
+    try {
+      const op = { id: opcoes.id, multiple: false };
+      if (opcoes.tipos) op.types = opcoes.tipos;
+      [h] = await window.showOpenFilePicker(op);
+    } catch(e){
+      if (!e || e.name !== "AbortError") edToast("Não foi possível escolher o arquivo: " + (e && e.message ? e.message : e), true);
+      return;
+    }
+    st.handle = h; st.modo = null; st.partes = null; st.caminho = null;
+    onde.hidden = true;
+
+    const auto = await edCaminhoAutomatico(h);
+    if (auto && auto.caminho){
+      st.caminho = auto.caminho;
+      campo.value = opcoes.formatar(auto.caminho);
+      campo.focus();
+      return;
+    }
+    if (auto && auto.faltaRaiz){
+      st.modo = "raiz"; st.partes = auto.faltaRaiz;
+      onde.querySelector(".pd-onde-txt").innerHTML = "O navegador não informa caminhos do disco. <b>" + edEsc(h.name) + "</b> está dentro da pasta conectada <b>" +
+        edEsc(rootHandle.name) + "</b>: informe o caminho dessa pasta uma vez e o resto é completado sozinho, agora e nas próximas vezes.";
+      onde.querySelector(".pd-onde-rot").textContent = "Caminho completo da pasta " + rootHandle.name;
+      pasta.placeholder = "Ex.: D:\\SVN\\trunk\\" + rootHandle.name;
+      pasta.value = "";
+      lembrarL.hidden = true;
+    } else {
+      st.modo = "pasta";
+      onde.querySelector(".pd-onde-txt").innerHTML = "O navegador não informa caminhos do disco. Informe a pasta onde está <b>" + edEsc(h.name) + "</b> (sem o nome do arquivo).";
+      onde.querySelector(".pd-onde-rot").textContent = "Pasta do arquivo";
+      pasta.placeholder = "Ex.: D:\\SVN\\trunk\\Docs\\imagens";
+      pasta.value = edPrefs().ultimaPastaArquivo || "";
+      lembrarL.hidden = false;
+    }
+    onde.hidden = false;
+    atualizar();
+    pasta.focus(); pasta.select();
+  });
+
+  return {
+    validar(){
+      if (st.modo && !limparPasta(pasta.value)){ pasta.focus(); return false; }
+      return true;
+    },
+    concluir(){
+      const v = limparPasta(pasta.value);
+      if (st.modo === "raiz" && v){
+        const bases = edPrefs().basesRaiz || {};
+        bases[rootHandle.name] = v;
+        edSalvarPrefs({ basesRaiz: bases });
+      } else if (st.modo === "pasta" && v){
+        edSalvarPrefs({ ultimaPastaArquivo: v });
+        if (onde.querySelector(".pd-onde-lembrar").checked) edLembrarPasta(st.handle, v); // dentro do clique em OK: pode abrir o seletor
+      }
+      if (st.handle && st.caminho) edArquivosEscolhidos.set(edNormCaminho(st.caminho), st.handle);
+    }
+  };
+}
+
+/** Confirma a pasta no seletor do navegador (já aberto na pasta do arquivo) e a lembra com o caminho informado. */
+async function edLembrarPasta(arquivo, pastaDoArquivo){
+  if (typeof window.showDirectoryPicker !== "function") return;
+  try {
+    const dir = await window.showDirectoryPicker({ id: "pd-pasta-lembrada", startIn: arquivo, mode: "read" });
+    const partes = await dir.resolve(arquivo);
+    if (!partes){ edToast("A pasta escolhida não contém " + arquivo.name + ". Nada foi lembrado.", true); return; }
+    const subpastas = partes.slice(0, -1).map(x => x.toLowerCase());
+    const segs = pastaDoArquivo.split(/[\\/]/);
+    const corte = segs.length - subpastas.length;
+    const confere = corte > 0 &&
+      segs.slice(corte).map(x => x.toLowerCase()).join("/") === subpastas.join("/") &&
+      (segs[corte - 1] || "").toLowerCase() === dir.name.toLowerCase();
+    if (!confere){ edToast("A pasta escolhida (" + dir.name + ") não bate com o caminho informado. Nada foi lembrado.", true); return; }
+    const base = segs.slice(0, corte).join(pastaDoArquivo.includes("\\") ? "\\" : "/");
+    await edSalvarBase(dir, base);
+    edToast("Pasta lembrada: " + base);
+  } catch(e){
+    if (!e || e.name !== "AbortError") edToast("Não foi possível lembrar a pasta: " + (e && e.message ? e.message : e), true);
+  }
+}
+
 /* ---------------------------- Caminho completo para o @include ----------------------------
    Por segurança o navegador nunca revela o caminho real de um arquivo no
    disco. Então: se o arquivo está dentro da pasta de documentação conectada,
@@ -2771,6 +2978,10 @@ async function edCaminhoCompleto(perguntar, forcarPergunta){
       edSalvarPrefs({ basesRaiz: bases });
     }
     return edJuntarCaminho(base, partes);
+  }
+  if (!forcarPergunta){
+    const viaBase = await edCaminhoPorBases(ed.handle);
+    if (viaBase) return viaBase;
   }
   const pastas = prefs.pastasArquivo || {};
   let dir = pastas[ed.handle.name];
@@ -3077,17 +3288,25 @@ const ED_ACOES = {
     edGuardarSelecao();
     const sel = edSelecao().texto.trim();
     const pareceUrl = /^(https?:\/\/|www\.)/i.test(sel) || RE_PARECE_SITE.test(sel);
+    let esc = null;
     edModal("Link externo",
-      '<label class="campo">Endereço<input type="text" class="mono" id="f-url" value="' + edEsc(pareceUrl ? sel : "") + '" placeholder="https://…"></label>' +
-      '<label class="campo">Texto exibido (opcional)<input type="text" id="f-texto" value="' + edEsc(pareceUrl ? "" : sel) + '"></label>',
+      edHtmlEscolher("f-url", "Endereço (site ou arquivo)", "https://… ou Procurar… para um arquivo", pareceUrl ? sel : "") +
+      '<label class="campo">Texto exibido (opcional)<input type="text" id="f-texto" value="' + edEsc(pareceUrl ? "" : sel) + '"></label>' +
+      '<p class="dica">Para apontar para um arquivo do computador ou da rede, use <b>Procurar…</b>: o link vira <code>file:///…</code> com o caminho completo.</p>',
       (m) => {
+        if (!esc.validar()) return false;
+        esc.concluir();
         let u = m.querySelector("#f-url").value.trim().replace(/\s/g, "%20").replace(/\(/g, "%28").replace(/\)/g, "%29");
         if (!u){ m.querySelector("#f-url").focus(); return false; }
         if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u.replace(/^\/+/, ""); // sem protocolo o PasDoc gera link quebrado
         const tx = m.querySelector("#f-texto").value.trim();
         edRestaurarSelecao();
         edInserir("@url(" + u + (tx ? " " + edEscaparParens(tx) : "") + ")");
-      }
+      },
+      { ok: "Inserir", aoAbrir: (m) => {
+        esc = edLigarEscolher(m, "f-url", { id: "pd-editor-arquivo", tipos: undefined, formatar: edCaminhoParaFileUrl });
+        if (!pareceUrl) m.querySelector("#f-url").focus();
+      } }
     );
   },
 
@@ -3172,15 +3391,25 @@ const ED_ACOES = {
 
   image: () => {
     edGuardarSelecao();
+    let esc = null;
     edModal("Imagem",
-      '<label class="campo">Arquivo da imagem<input type="text" class="mono" id="f-img" placeholder="Ex.: imagens/fluxo.png"></label>' +
-      '<p class="dica">Caminho relativo a partir de onde o PasDoc roda. Ele copia a imagem para a pasta de saída da documentação.</p>',
+      edHtmlEscolher("f-img", "Arquivo da imagem", "Clique em Procurar… ou digite o caminho") +
+      '<p class="dica">Use <b>Procurar…</b> para escolher a imagem: o caminho completo é preenchido sozinho. O PasDoc copia a imagem para a pasta de saída da documentação.</p>',
       (m) => {
         const f = m.querySelector("#f-img").value.trim();
         if (!f){ m.querySelector("#f-img").focus(); return false; }
+        if (!esc.validar()) return false;
+        esc.concluir();
         edRestaurarSelecao();
         edInserir("@image(" + f + ")");
-      }
+      },
+      { ok: "Inserir", aoAbrir: (m) => {
+        esc = edLigarEscolher(m, "f-img", {
+          id: "pd-editor-imagem",
+          tipos: [{ description: "Imagens", accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".webp"] } }],
+          formatar: (c) => c
+        });
+      } }
     );
   },
 
@@ -3775,7 +4004,7 @@ document.getElementById("pd-btn-instalar").addEventListener("click", async () =>
   document.getElementById("pd-btn-instalar").hidden = true;
 });
 
-// Atalho "Editor TXT" do app instalado (clique direito no ícone): ./?abrir=editor
+// Atalho "Documentação detalhada" do app instalado (clique direito no ícone): ./?abrir=editor
 const abrirNoInicio = new URLSearchParams(location.search).get("abrir");
 if (abrirNoInicio) history.replaceState(null, "", location.pathname + location.hash);
 
