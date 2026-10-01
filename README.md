@@ -44,6 +44,7 @@ Da próxima vez que abrir o site no mesmo navegador, ele lembra da pasta — só
 5. O ícone de sol/lua alterna entre o visual original (claro) e um tema escuro aplicado por cima (opcional).
 6. Se a pasta de documentação for atualizada (nova branch, novos fontes), use o botão de reescanear ao lado de "Trocar pasta".
 7. Use **Editor TXT** (no topo) para escrever complementos de documentação em `.txt` com tags do PasDoc — veja abaixo.
+8. O botão **Guias** (no topo) abre os HTMLs de apoio que ficam soltos na **raiz da pasta de documentação** (fora das pastas de projeto), como `help-insight-delphi-seattle.html` e `pasdoc-tags.html`. Eles não fazem parte do site: são lidos da pasta conectada, pela lista `guias` do `_perpetualdoc_index.json` ou, se o JSON não tiver essa lista, pela leitura direta da raiz. Qualquer outro `.html` colocado na raiz aparece no menu automaticamente. Dentro do guia dá pra alternar entre eles, abrir em outra aba e voltar pra onde estava; o tema claro/escuro do site é aplicado pelo próprio CSS do guia.
 
 ## Editor TXT (complementos via @include)
 

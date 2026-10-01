@@ -5,7 +5,8 @@ gerar_indice.py — PerpetualDoc Web
 
 Varre a pasta raiz onde ficam os projetos de documentação (gerados pelo
 PasDoc) e gera um único arquivo JSON (_perpetualdoc_index.json) com tudo que
-o site precisa pra montar a busca, sem precisar ler e processar cada HTML na
+o site precisa pra montar a busca (e a lista de guias, os .html soltos
+na raiz da pasta), sem precisar ler e processar cada HTML na
 hora que alguém abre o site no navegador.
 
 Não depende de nenhuma biblioteca externa — só a biblioteca padrão do Python
@@ -228,6 +229,24 @@ def montar_documentos(pasta_raiz, html_files, doc_folders):
     return documentos
 
 
+def montar_guias(pasta_raiz, html_files):
+    """Guias = arquivos .html soltos na RAIZ da pasta (fora das pastas de
+    projeto e sem ser index.html), ex.: help-insight-delphi-seattle.html e
+    pasdoc-tags.html. O site mostra esses arquivos no botão "Guias"."""
+    guias = []
+    for relp in html_files:
+        if "/" in relp or relp.lower() == "index.html":
+            continue
+        try:
+            _, titulo = extrair_arquivo(os.path.join(pasta_raiz, relp))
+        except Exception as e:
+            print(f"  aviso: não consegui ler o guia '{relp}' ({e}); usando o nome do arquivo", file=sys.stderr)
+            titulo = None
+        guias.append({"arquivo": relp, "titulo": (titulo or "").strip() or os.path.splitext(relp)[0]})
+    guias.sort(key=lambda g: g["titulo"].lower())
+    return guias
+
+
 # ---------------------------------------------------------------------------
 # Geração + comparação com o arquivo existente
 # ---------------------------------------------------------------------------
@@ -238,6 +257,9 @@ def gerar(pasta_raiz, caminho_json, compacto=False):
     print(f"  {len(html_files)} arquivo(s) .html encontrados, {len(doc_folders)} documentação(ões) (pastas com index.html)")
 
     documentos = montar_documentos(pasta_raiz, html_files, doc_folders)
+    guias = montar_guias(pasta_raiz, html_files)
+    if guias:
+        print(f"  {len(guias)} guia(s) na raiz: " + ", ".join(g["arquivo"] for g in guias))
 
     anterior = None
     if os.path.exists(caminho_json):
@@ -248,7 +270,7 @@ def gerar(pasta_raiz, caminho_json, compacto=False):
             print(f"  aviso: não consegui ler o JSON existente ({e}); vou tratar como se não existisse", file=sys.stderr)
             anterior = None
 
-    mudou = anterior is None or anterior.get("documentos") != documentos
+    mudou = anterior is None or anterior.get("documentos") != documentos or anterior.get("guias", []) != guias
 
     if not mudou:
         print(f"Sem mudanças de conteúdo — arquivo mantido como está: {caminho_json}")
@@ -258,6 +280,7 @@ def gerar(pasta_raiz, caminho_json, compacto=False):
         "versao": VERSAO_FORMATO,
         "geradoEm": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "documentos": documentos,
+        "guias": guias,
     }
 
     # Formatado (indentado) por padrão, pra dar pra ver as alterações num diff

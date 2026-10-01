@@ -238,6 +238,19 @@
   #view-editor{ flex:1; display:none; flex-direction:column; min-height:0; }
   #view-editor.active{ display:flex; }
 
+  /* ---------- guias (HTMLs de apoio na raiz do site) ---------- */
+  .pd-btn-guias[hidden]{ display:none; }
+  .pd-btn-guias{ display:flex; align-items:center; gap:7px; }
+  .pd-btn-guias .chev{ width:11px; height:11px; opacity:.6; margin-left:-2px; }
+  .pd-btn-guias.on{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
+  .pd-pop.pd-guias-menu{ min-width:260px; }
+  .pd-pop.pd-guias-menu .mi.atual{ background:var(--accent-soft); }
+  .pd-pop.pd-guias-menu .mi small{ font-family:var(--mono); }
+  #pd-guia-seg[hidden]{ display:none; }
+  #view-guia{ flex:1; display:none; flex-direction:column; min-height:0; }
+  #view-guia.active{ display:flex; }
+  #pd-guia-frame{ flex:1; border:0; background:transparent; width:100%; height:100%; }
+
   .pd-edbar{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     padding:10px 16px; border-bottom:1px solid var(--border-soft);
@@ -415,6 +428,7 @@
     .pd-edbody[data-modo="split"]{ flex-direction:column; }
     .pd-edbody[data-modo="split"] .pd-edsrc{ border-right:0; border-bottom:1px solid var(--border); }
     .pd-btn-editor span{ display:none; }
+    .pd-btn-guias span{ display:none; }
   }
   @media (prefers-reduced-motion: reduce){
     .pd-toast{ transition:none; }
@@ -440,6 +454,11 @@
       <button class="pd-btn pd-btn-editor" id="pd-btn-editor" title="Criar ou editar um TXT de documentação PasDoc (para usar com @include)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
         <span>Editor TXT</span>
+      </button>
+      <button class="pd-btn pd-btn-guias" id="pd-btn-guias" title="Guias que estão na raiz da pasta de documentação" aria-haspopup="menu" aria-expanded="false" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h7M9 11h5"/></svg>
+        <span>Guias</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <a class="pd-btn icon" href="https://github.com/NdeFaria/PerpetualDocWeb" target="_blank" rel="noopener noreferrer" title="Ver código-fonte no GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a10.98 10.98 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.44-2.69 5.42-5.25 5.7.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .3.2.66.79.55A10.52 10.52 0 0023.5 12c0-6.35-5.15-11.5-11.5-11.5z"/></svg>
@@ -500,6 +519,23 @@
     </div>
     <div class="pd-docbody">
       <iframe id="pd-frame" title="Documentação"></iframe>
+    </div>
+  </div>
+
+  <!-- GUIAS (HTMLs de apoio: Help Insight / Tags PasDoc) -->
+  <div id="view-guia">
+    <div class="pd-docbar">
+      <button class="pd-btn icon" id="pd-guia-voltar" title="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="pd-crumb" id="pd-guia-crumb"></div>
+      <div class="pd-seg" id="pd-guia-seg" role="group" aria-label="Escolher guia"></div>
+      <button class="pd-btn icon" id="pd-guia-novaaba" title="Abrir este guia em outra aba">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg>
+      </button>
+    </div>
+    <div class="pd-docbody">
+      <iframe id="pd-guia-frame" title="Guia"></iframe>
     </div>
   </div>
 
@@ -597,6 +633,7 @@ const CONCORRENCIA_LEITURA = 16;
 let rootHandle = null;
 let fileMap = new Map();     // caminho relativo (posix) -> FileSystemFileHandle
 let docItems = [];           // { title, relFolder, indexPath, normText, normTitle, normPath, snippetSource }
+let guiasItems = [];         // { arquivo, titulo } — HTMLs soltos na raiz da pasta conectada (ver "Guias")
 let currentQuery = "";
 let activeResultIndex = -1;
 let currentPath = null;
@@ -836,6 +873,10 @@ async function tentarCarregarIndiceJson(){
     const file = await fh.getFile();
     const texto = await file.text(); // JSON é sempre UTF-8, não precisa da cascata de encoding
     const dados = JSON.parse(texto);
+    if (dados && Array.isArray(dados.guias)){
+      guiasDoJson = dados.guias.filter(g => g && typeof g.arquivo === "string" && fileMap.has(g.arquivo))
+        .map(g => ({ arquivo: g.arquivo, titulo: typeof g.titulo === "string" && g.titulo.trim() ? g.titulo.trim() : g.arquivo }));
+    }
     if (!dados || !Array.isArray(dados.documentos)) return null;
     const validos = dados.documentos.filter(d =>
       d && typeof d.indexPath === "string" && fileMap.has(d.indexPath) &&
@@ -848,9 +889,11 @@ async function tentarCarregarIndiceJson(){
 }
 
 let usouIndiceJson = false;
+let guiasDoJson = null;      // lista "guias" do _perpetualdoc_index.json, se houver
 
 async function construirIndice(onProgress){
   fileMap = new Map();
+  guiasDoJson = null;
   const docFolders = [];
   await varrerPasta(rootHandle, "", docFolders, true);
 
@@ -858,6 +901,7 @@ async function construirIndice(onProgress){
   usouIndiceJson = !!doIndiceJson;
   if (doIndiceJson){
     docItems = doIndiceJson;
+    await montarGuias(null);
     if (onProgress) onProgress(docItems.length, docItems.length);
     return docItems.length;
   }
@@ -894,6 +938,7 @@ async function construirIndice(onProgress){
   });
 
   await persistTextCache(entradasParaSalvar);
+  await montarGuias(tituloPorArquivo);
 
   docItems = [];
   for (const relFolder of docFolders){
@@ -923,6 +968,30 @@ async function construirIndice(onProgress){
   }
 
   return docItems.length;
+}
+
+/**
+ * Guias = arquivos .html soltos na RAIZ da pasta conectada (fora das pastas de
+ * projeto e sem ser index.html), ex.: help-insight-delphi-seattle.html e
+ * pasdoc-tags.html. Vêm da lista "guias" do _perpetualdoc_index.json quando o
+ * JSON tem essa lista; senão, da leitura direta da raiz.
+ */
+async function montarGuias(tituloPorArquivo){
+  if (guiasDoJson){
+    guiasItems = guiasDoJson;
+  } else {
+    const soltos = [...fileMap.keys()].filter(p => !p.includes("/") && /\.html?$/i.test(p) && p.toLowerCase() !== "index.html");
+    guiasItems = [];
+    for (const arquivo of soltos){
+      let titulo = tituloPorArquivo ? tituloPorArquivo.get(arquivo) : null;
+      if (!tituloPorArquivo){
+        try { titulo = extrairTitulo(await lerComoTexto(await fileMap.get(arquivo).getFile())); }
+        catch(e) { titulo = null; }
+      }
+      guiasItems.push({ arquivo, titulo: (titulo || "").trim() || arquivo.replace(/\.html?$/i, "") });
+    }
+  }
+  guiasItems.sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR"));
 }
 
 /* ---------------------------- Busca (spotlight) ---------------------------- */
@@ -1155,7 +1224,7 @@ async function responderRequisicaoArquivo(relPath){
     let texto;
     try { texto = await lerComoTexto(file); }
     catch(e){ return { ok: false, status: 500, mensagem: "Erro ao ler o arquivo." }; }
-    if (tipo === "text/html" && temaAtual() === "dark"){
+    if (tipo === "text/html" && temaAtual() === "dark" && !ehGuia(relPath)){
       texto = injetarTemaEscuro(texto);
     }
     return { ok: true, tipo: tipo + "; charset=utf-8", texto };
@@ -1235,12 +1304,14 @@ function atualizarBreadcrumb(relPath){
 }
 
 function mostrarViewDoc(){
+  esconderGuia();
   document.getElementById("view-editor").classList.remove("active");
   document.getElementById("pd-btn-editor").classList.remove("on");
   document.getElementById("view-home").classList.add("hidden");
   document.getElementById("view-doc").classList.add("active");
 }
 function mostrarViewHome(){
+  esconderGuia();
   document.getElementById("view-editor").classList.remove("active");
   document.getElementById("pd-btn-editor").classList.remove("on");
   document.getElementById("view-doc").classList.remove("active");
@@ -1593,6 +1664,7 @@ async function indexarERenderizar(){
     document.getElementById("pd-index-status").textContent =
       total + " documentação(ões) indexada(s)" + (usouIndiceJson ? " (via índice pré-gerado)" : "") + ". Busca sem acento, por nome e conteúdo. Nada sai deste navegador.";
     atualizarPillPasta();
+    atualizarBotaoGuias();
     document.getElementById("pd-search-input").value = "";
     executarBusca("");
     document.getElementById("pd-search-input").focus();
@@ -1620,7 +1692,9 @@ function atualizarPillPasta(){
     rootHandle = null;
     fileMap = new Map();
     docItems = [];
+    guiasItems = [];
     mostrarViewHome();
+    atualizarBotaoGuias();
     renderConnectScreen("initial");
   });
 }
@@ -1642,6 +1716,7 @@ function aplicarTema(tema, semRecarregarDoc){
   const btn = document.getElementById("pd-btn-theme");
   if (btn) btn.innerHTML = tema === "dark" ? ICONE_SOL : ICONE_LUA;
   edAoTrocarTema();
+  guiaAplicarTema();
 
   if (!semRecarregarDoc && currentPath){
     document.getElementById("pd-frame").src = caminhoParaUrl(currentPath) + "?_pd=" + Date.now();
@@ -1655,6 +1730,7 @@ document.getElementById("pd-btn-theme").addEventListener("click", () => {
 /* ---------------------------- Eventos de UI ---------------------------- */
 
 document.getElementById("pd-brand").addEventListener("click", () => {
+  if (guiaAtivo()){ fecharGuia("home"); return; }
   if (edAtivo()){ fecharEditor("home"); return; }
   if (rootHandle) mostrarViewHome();
 });
@@ -1695,9 +1771,12 @@ document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){
     if (edAtivo()) return;
     e.preventDefault();
+    if (guiaAtivo()){ fecharGuia("home"); return; }
     if (document.getElementById("view-doc").classList.contains("active")) mostrarViewHome();
     else document.getElementById("pd-search-input").focus();
   }
+  if (e.key === "Escape" && guiaMenuAtual){ fecharMenuGuias(); return; }
+  if (e.key === "Escape" && guiaAtivo() && $ed("pd-modal-bg").hidden){ fecharGuia(); return; }
   if (e.key === "Escape" && document.getElementById("view-doc").classList.contains("active")){
     mostrarViewHome();
   }
@@ -3229,7 +3308,7 @@ function edAjuda(){
     ["@image(arquivo.png)", "Imagem"], ["@@  @(  @)", "Escrever @ ou parênteses literalmente"]
   ];
   edModal("Referência rápida — tags PasDoc",
-    '<div class="ref"><table>' + linhas.map(l => "<tr><td>" + l[0] + "</td><td>" + l[1] + "</td></tr>").join("") + "</table>" +
+    '<div class="ref">' + (guiaTagsPasdoc() ? '<p style="margin:0 0 10px"><button class="pd-btn" type="button" id="pd-ed-ajuda-guia">Abrir o guia completo das tags do PasDoc</button></p>' : "") + '<table>' + linhas.map(l => "<tr><td>" + l[0] + "</td><td>" + l[1] + "</td></tr>").join("") + "</table>" +
     "<h4>Como usar o arquivo no fonte</h4>" +
     "<p>Salve o .txt e referencie no comentário de documentação da unit ou da classe:</p>" +
     "<p><code>{ @include(" + edEsc(ed.nome || "MinhaUnit.txt") + ") }</code></p>" +
@@ -3240,6 +3319,13 @@ function edAjuda(){
     "<p>Ctrl+B negrito · Ctrl+I itálico · Ctrl+K link · Ctrl+S salvar · Ctrl+Shift+S salvar como · Ctrl+O abrir</p></div>",
     null, { largo: true }
   );
+  const bGuia = document.getElementById("pd-ed-ajuda-guia");
+  if (bGuia) bGuia.addEventListener("click", () => {
+    const cancelar = document.querySelector('#pd-modal-bg [data-acao="cancelar"]');
+    if (cancelar) cancelar.click();
+    const g = guiaTagsPasdoc();
+    if (g) abrirGuia(g.arquivo);
+  });
 }
 
 function edMostrarAvisos(){
@@ -3279,7 +3365,9 @@ function edAtivo(){ return document.getElementById("view-editor").classList.cont
 
 async function abrirEditor(){
   if (edAtivo()) return;
-  ed.viewAnterior = document.getElementById("view-doc").classList.contains("active") ? "doc" : "home";
+  if (guiaAtivo()) ed.viewAnterior = guia.voltarPara === "doc" ? "doc" : "home";
+  else ed.viewAnterior = document.getElementById("view-doc").classList.contains("active") ? "doc" : "home";
+  esconderGuia();
   document.getElementById("view-home").classList.add("hidden");
   document.getElementById("view-doc").classList.remove("active");
   document.getElementById("view-editor").classList.add("active");
@@ -3447,6 +3535,172 @@ document.addEventListener("keydown", (e) => {
 
 window.addEventListener("beforeunload", (e) => {
   if (ed.iniciado && ed.sujo){ edSalvarRascunho(); e.preventDefault(); e.returnValue = ""; }
+});
+
+/* ---------------------------- Guias ----------------------------
+   HTMLs de apoio que ficam na RAIZ da pasta de documentação conectada (não
+   no site): hoje help-insight-delphi-seattle.html e pasdoc-tags.html. A lista
+   vem do _perpetualdoc_index.json ("guias") ou da leitura direta da raiz
+   (montarGuias). Abrem pelo mesmo Service Worker da documentação — nada sai
+   do navegador — e ganham um menu único no topo, com troca rápida entre eles. */
+
+const guia = { atual: null, voltarPara: "home" };
+let guiaMenuAtual = null;
+
+function ehGuia(relPath){ return guiasItems.some(g => g.arquivo === relPath); }
+function guiaCurto(titulo){ return titulo.split(/\s+[—–-]\s+/)[0]; }
+function guiaTagsPasdoc(){
+  return guiasItems.find(g => /pasdoc/i.test(g.arquivo) && /tag/i.test(g.arquivo)) ||
+         guiasItems.find(g => /pasdoc/i.test(g.titulo) && /tag/i.test(g.titulo)) || null;
+}
+
+function atualizarBotaoGuias(){
+  const btn = document.getElementById("pd-btn-guias");
+  btn.hidden = !(rootHandle && guiasItems.length);
+  if (btn.hidden) fecharMenuGuias();
+  if (guiaAtivo() && !ehGuia(guia.atual)) fecharGuia("home");
+}
+
+function guiaAtivo(){ return document.getElementById("view-guia").classList.contains("active"); }
+
+function esconderGuia(){
+  const v = document.getElementById("view-guia");
+  if (!v.classList.contains("active")) return;
+  v.classList.remove("active");
+  document.getElementById("pd-btn-guias").classList.remove("on");
+  document.title = "PerpetualDoc";
+}
+
+function guiaAplicarTema(){
+  if (!guia.atual) return;
+  try {
+    const doc = document.getElementById("pd-guia-frame").contentDocument;
+    if (doc && doc.documentElement) doc.documentElement.setAttribute("data-theme", temaAtual());
+  } catch(e) { /* frame de outra origem: segue o tema do sistema */ }
+}
+
+function guiaMontarBarra(){
+  const g = guiasItems.find(x => x.arquivo === guia.atual);
+  document.getElementById("pd-guia-crumb").innerHTML = "Guias / <b>" + escapeHtml(g ? g.titulo : "") + "</b>";
+  const seg = document.getElementById("pd-guia-seg");
+  // A troca rápida só faz sentido com poucos guias; com muitos, fica no menu do topo.
+  seg.hidden = guiasItems.length < 2 || guiasItems.length > 4;
+  seg.innerHTML = seg.hidden ? "" : guiasItems.map(x =>
+    '<button type="button" data-guia="' + escapeAttr(x.arquivo) + '" class="' + (x.arquivo === guia.atual ? "on" : "") + '" title="' + escapeAttr(x.titulo) + '">' + escapeHtml(guiaCurto(x.titulo)) + "</button>"
+  ).join("");
+}
+
+function abrirGuia(arquivo){
+  const g = guiasItems.find(x => x.arquivo === arquivo);
+  fecharMenuGuias();
+  if (!g || !fileMap.has(g.arquivo)){
+    alert("Este guia não está mais na raiz da pasta conectada. Use o botão de reescanear.");
+    return;
+  }
+
+  if (!guiaAtivo()){
+    if (edAtivo()){
+      guia.voltarPara = "editor";
+      document.getElementById("view-editor").classList.remove("active");
+      $ed("pd-btn-editor").classList.remove("on");
+      if (typeof edFecharPop === "function") edFecharPop();
+    } else if (document.getElementById("view-doc").classList.contains("active")){
+      guia.voltarPara = "doc";
+      document.getElementById("view-doc").classList.remove("active");
+    } else {
+      guia.voltarPara = "home";
+      document.getElementById("view-home").classList.add("hidden");
+    }
+    document.getElementById("view-guia").classList.add("active");
+    document.getElementById("pd-btn-guias").classList.add("on");
+  }
+
+  guia.atual = g.arquivo;
+  guiaMontarBarra();
+  document.title = g.titulo + " — PerpetualDoc";
+  document.getElementById("pd-guia-frame").src = caminhoParaUrl(g.arquivo);
+}
+
+function fecharGuia(destino){
+  if (!guiaAtivo()) return;
+  const para = destino || guia.voltarPara;
+  esconderGuia();
+  if (para === "editor"){
+    document.getElementById("view-editor").classList.add("active");
+    $ed("pd-btn-editor").classList.add("on");
+    document.title = ed.nome ? ed.nome + " — PerpetualDoc" : "PerpetualDoc";
+    edAtualizarCabecalho();
+    edTa().focus();
+  } else if (para === "doc" && currentPath){
+    document.getElementById("view-doc").classList.add("active");
+  } else {
+    mostrarViewHome();
+  }
+}
+
+function fecharMenuGuias(){
+  if (!guiaMenuAtual) return;
+  guiaMenuAtual.remove();
+  guiaMenuAtual = null;
+  document.getElementById("pd-btn-guias").setAttribute("aria-expanded", "false");
+}
+
+function abrirMenuGuias(){
+  const btn = document.getElementById("pd-btn-guias");
+  const menu = document.createElement("div");
+  menu.className = "pd-pop pd-guias-menu";
+  menu.setAttribute("role", "menu");
+  menu.innerHTML = '<div class="mh">Guias na raiz da pasta</div>' + guiasItems.map(g =>
+    '<button class="mi' + (guiaAtivo() && guia.atual === g.arquivo ? " atual" : "") + '" role="menuitem" data-guia="' + escapeAttr(g.arquivo) + '">' +
+    escapeHtml(g.titulo) + "<small>" + escapeHtml(g.arquivo) + "</small></button>"
+  ).join("");
+  document.body.appendChild(menu);
+  const r = btn.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + "px";
+  menu.style.top = (r.bottom + 6) + "px";
+  menu.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-guia]");
+    if (b) abrirGuia(b.getAttribute("data-guia"));
+  });
+  menu.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const itens = [...menu.querySelectorAll(".mi")];
+    const i = itens.indexOf(document.activeElement);
+    itens[(i + (e.key === "ArrowDown" ? 1 : itens.length - 1)) % itens.length].focus();
+  });
+  guiaMenuAtual = menu;
+  btn.setAttribute("aria-expanded", "true");
+  menu.querySelector(".mi").focus();
+}
+
+document.getElementById("pd-btn-guias").addEventListener("click", () => {
+  if (guiaMenuAtual) fecharMenuGuias(); else abrirMenuGuias();
+});
+document.addEventListener("mousedown", (e) => {
+  if (guiaMenuAtual && !guiaMenuAtual.contains(e.target) && !e.target.closest("#pd-btn-guias")) fecharMenuGuias();
+});
+window.addEventListener("resize", fecharMenuGuias);
+window.addEventListener("blur", fecharMenuGuias); // clique dentro de um iframe
+
+document.getElementById("pd-guia-seg").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-guia]");
+  if (b && b.getAttribute("data-guia") !== guia.atual) abrirGuia(b.getAttribute("data-guia"));
+});
+document.getElementById("pd-guia-voltar").addEventListener("click", () => fecharGuia());
+document.getElementById("pd-guia-novaaba").addEventListener("click", () => {
+  if (guia.atual) window.open(caminhoParaUrl(guia.atual), "_blank", "noopener");
+});
+document.getElementById("pd-guia-frame").addEventListener("load", () => {
+  guiaAplicarTema();
+  // Esc dentro do guia também volta (o iframe é da mesma origem).
+  try {
+    const w = document.getElementById("pd-guia-frame").contentWindow;
+    if (w && !w.__pdEsc){
+      w.__pdEsc = true;
+      w.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharGuia(); });
+    }
+  } catch(e) { /* outra origem */ }
 });
 
 /* ---------------------------- Inicialização ---------------------------- */
