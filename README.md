@@ -22,7 +22,7 @@ Em resumo: o conteúdo da documentação nunca vira um pacote de rede. Ele não 
 
 ## E o Netlify, onde isso está hospedado?
 
-O Netlify hospeda só o **código do site** — três arquivos estáticos (`index.html`, `sw.js`, `favicon.ico`), sem nenhum servidor de aplicação, banco de dados ou API por trás. É o mesmo papel que o Netlify teria hospedando uma página HTML qualquer: ele entrega esses arquivos pro seu navegador quando você acessa o link, e a partir daí o que acontece é só entre você e o seu próprio computador, como descrito acima. O Netlify **nunca recebe, processa ou armazena** nenhum arquivo da sua documentação — ele não tem como, já que essa leitura nunca sai do seu navegador.
+O Netlify hospeda só o **código do site** — arquivos estáticos (`index.html`, `sw.js`, `favicon.ico`, `manifest.webmanifest` e a pasta `icons/`), sem nenhum servidor de aplicação, banco de dados ou API por trás. É o mesmo papel que o Netlify teria hospedando uma página HTML qualquer: ele entrega esses arquivos pro seu navegador quando você acessa o link, e a partir daí o que acontece é só entre você e o seu próprio computador, como descrito acima. O Netlify **nunca recebe, processa ou armazena** nenhum arquivo da sua documentação — ele não tem como, já que essa leitura nunca sai do seu navegador.
 
 O repositório no GitHub está conectado direto ao Netlify: toda alteração enviada pro repositório é automaticamente publicada no site. Isso significa que o que está rodando em produção é sempre exatamente o que está no repositório público — dá pra comparar os dois e confirmar que não tem nada escondido.
 
@@ -66,13 +66,22 @@ O botão **Editor TXT** abre um editor de texto com botões que inserem as tags 
 
 Assim como o resto do site, o editor não envia nada para a internet: ele só lê e grava os arquivos que você escolher, e o rascunho fica no armazenamento local do navegador.
 
+## Instalar como aplicativo
+
+No Chrome ou no Edge, o PerpetualDoc pode ser instalado como aplicativo: abre em janela própria (sem barra de endereço nem abas), ganha ícone na área de trabalho, no menu Iniciar e na barra de tarefas, e funciona com todos os recursos do site — busca, documentação, Guias e Editor TXT.
+
+- Clique em **Instalar app** no topo do site (o botão aparece quando o navegador oferece a instalação), ou use o ícone de instalar na barra de endereço / menu do navegador → *Instalar PerpetualDoc*.
+- Clicando com o botão direito no ícone do app, há o atalho **Editor TXT**, que já abre direto no editor.
+- O app usa a mesma pasta conectada do site (mesma origem), então não precisa selecionar de novo. No app instalado, o Chrome/Edge costuma oferecer **"Permitir em todas as visitas"** ao confirmar a pasta, o que elimina o clique de confirmação a cada abertura.
+- Atualizações são automáticas: com internet, o app sempre carrega a versão publicada. Sem internet, abre com a última versão baixada (só os arquivos do site ficam guardados; a documentação continua sendo lida da pasta, nunca copiada).
+
 ## Requisitos
 
 Funciona em **Google Chrome, Microsoft Edge** ou outro navegador baseado em Chromium — são os únicos que têm o recurso de acesso a pastas locais que o site usa. Não funciona no Firefox nem no Safari.
 
 ## Quer rodar por conta própria?
 
-Os três arquivos (`index.html`, `sw.js`, `favicon.ico`) também funcionam localmente, servidos por qualquer servidor simples (não abre com duplo clique, porque o Service Worker exige http/https):
+Os arquivos do site (`index.html`, `sw.js`, `favicon.ico`, `manifest.webmanifest`, `icons/`) também funcionam localmente, servidos por qualquer servidor simples (não abre com duplo clique, porque o Service Worker exige http/https):
 
 ```bash
 python3 -m http.server 8080

@@ -6,6 +6,10 @@
 <title>PerpetualDoc</title>
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="theme-color" content="#0d1117" />
+<meta name="application-name" content="PerpetualDoc" />
 <style>
   :root{
     --bg:#0a0d12;
@@ -240,6 +244,8 @@
 
   /* ---------- guias (HTMLs de apoio na raiz do site) ---------- */
   .pd-btn-guias[hidden]{ display:none; }
+  .pd-btn-instalar{ display:flex; align-items:center; gap:7px; }
+  .pd-btn-instalar[hidden]{ display:none; }
   .pd-btn-guias{ display:flex; align-items:center; gap:7px; }
   .pd-btn-guias .chev{ width:11px; height:11px; opacity:.6; margin-left:-2px; }
   .pd-btn-guias.on{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
@@ -429,6 +435,7 @@
     .pd-edbody[data-modo="split"] .pd-edsrc{ border-right:0; border-bottom:1px solid var(--border); }
     .pd-btn-editor span{ display:none; }
     .pd-btn-guias span{ display:none; }
+    .pd-btn-instalar span{ display:none; }
   }
   @media (prefers-reduced-motion: reduce){
     .pd-toast{ transition:none; }
@@ -459,6 +466,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h7M9 11h5"/></svg>
         <span>Guias</span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="pd-btn pd-btn-instalar" id="pd-btn-instalar" title="Instalar o PerpetualDoc como aplicativo (janela própria, atalho na área de trabalho e na barra de tarefas)" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        <span>Instalar app</span>
       </button>
       <a class="pd-btn icon" href="https://github.com/NdeFaria/PerpetualDocWeb" target="_blank" rel="noopener noreferrer" title="Ver código-fonte no GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a10.98 10.98 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.44-2.69 5.42-5.25 5.7.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .3.2.66.79.55A10.52 10.52 0 0023.5 12c0-6.35-5.15-11.5-11.5-11.5z"/></svg>
@@ -1715,6 +1726,8 @@ function aplicarTema(tema, semRecarregarDoc){
 
   const btn = document.getElementById("pd-btn-theme");
   if (btn) btn.innerHTML = tema === "dark" ? ICONE_SOL : ICONE_LUA;
+  const metaCor = document.querySelector('meta[name="theme-color"]');
+  if (metaCor) metaCor.setAttribute("content", tema === "light" ? "#eef0f3" : "#0d1117"); // barra de título do app instalado
   edAoTrocarTema();
   guiaAplicarTema();
 
@@ -3735,7 +3748,40 @@ async function iniciar(){
   }
 }
 
-iniciar();
+/* ---------------------------- App instalado (PWA) ----------------------------
+   O site pode ser instalado como aplicativo pelo Chrome/Edge: abre em janela
+   própria, ganha ícone na área de trabalho/menu Iniciar/barra de tarefas e
+   continua 100% local (mesma origem, mesma pasta conectada, mesmo Service
+   Worker). O botão "Instalar app" só aparece quando o navegador oferece a
+   instalação e some quando o site já está rodando como app. */
+
+let pedidoInstalacao = null;
+const rodandoComoApp = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: window-controls-overlay)").matches;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  pedidoInstalacao = e;
+  if (!rodandoComoApp()) document.getElementById("pd-btn-instalar").hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+  pedidoInstalacao = null;
+  document.getElementById("pd-btn-instalar").hidden = true;
+});
+document.getElementById("pd-btn-instalar").addEventListener("click", async () => {
+  if (!pedidoInstalacao) return;
+  pedidoInstalacao.prompt();
+  try { await pedidoInstalacao.userChoice; } catch(e) { /* janela fechada */ }
+  pedidoInstalacao = null;
+  document.getElementById("pd-btn-instalar").hidden = true;
+});
+
+// Atalho "Editor TXT" do app instalado (clique direito no ícone): ./?abrir=editor
+const abrirNoInicio = new URLSearchParams(location.search).get("abrir");
+if (abrirNoInicio) history.replaceState(null, "", location.pathname + location.hash);
+
+iniciar().then(() => {
+  if (abrirNoInicio === "editor") abrirEditor();
+});
 
 })();
 </script>

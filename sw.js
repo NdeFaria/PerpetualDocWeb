@@ -14,13 +14,47 @@
 // projeto do GitHub Pages, etc.), desde que os dois arquivos fiquem juntos.
 const PREFIXO = self.location.pathname.replace(/[^/]*$/, "") + "__pd_docs__/";
 
-self.addEventListener("install", () => {
+// Cópia local dos arquivos DO SITE (index.html, ícones, manifest) — nunca da
+// documentação. Serve só pro app abrir mesmo sem internet; com internet, a
+// versão publicada sempre vem primeiro (rede primeiro, cópia só como reserva).
+const CACHE_SITE = "perpetualdoc-site-v1";
+const BASE = self.location.pathname.replace(/[^/]*$/, "");
+const ARQUIVOS_SITE = ["", "index.html", "favicon.ico", "manifest.webmanifest",
+  "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"];
+
+self.addEventListener("install", (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_SITE)
+      .then((c) => Promise.all(ARQUIVOS_SITE.map((a) => c.add(BASE + a).catch(() => null))))
+      .catch(() => null)
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const nomes = await caches.keys();
+    await Promise.all(nomes.filter((n) => n.startsWith("perpetualdoc-site-") && n !== CACHE_SITE).map((n) => caches.delete(n)));
+    await self.clients.claim();
+  })());
 });
+
+async function redePrimeiro(request, ehNavegacao){
+  const cache = await caches.open(CACHE_SITE);
+  try {
+    const resp = await fetch(request);
+    if (resp && resp.ok && resp.type === "basic") cache.put(request, resp.clone()).catch(() => {});
+    return resp;
+  } catch(e) {
+    const salvo = await cache.match(request, { ignoreSearch: ehNavegacao });
+    if (salvo) return salvo;
+    if (ehNavegacao){
+      const index = await cache.match(BASE + "index.html") || await cache.match(BASE);
+      if (index) return index;
+    }
+    throw e;
+  }
+}
 
 let proximoId = 1;
 const pendentes = new Map();
@@ -47,7 +81,16 @@ async function pedirArquivoParaAAba(relPath) {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || !url.pathname.startsWith(PREFIXO)) return;
+  if (url.origin !== self.location.origin) return;
+
+  // Arquivos do próprio site (não da documentação): rede primeiro, cópia local se offline.
+  if (!url.pathname.startsWith(PREFIXO)){
+    if (event.request.method !== "GET" || url.pathname === BASE + "sw.js") return;
+    const rel = url.pathname.slice(BASE.length);
+    const ehNavegacao = event.request.mode === "navigate";
+    if (ehNavegacao || ARQUIVOS_SITE.includes(rel)) event.respondWith(redePrimeiro(event.request, ehNavegacao));
+    return;
+  }
 
   const relPath = decodeURIComponent(url.pathname.slice(PREFIXO.length));
 
