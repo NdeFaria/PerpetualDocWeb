@@ -419,9 +419,10 @@
   .pd-modal .pd-linha-arq .pd-btn{ white-space:nowrap; flex-shrink:0; }
   .pd-modal .pd-onde{ border-left:2px solid var(--accent); padding:2px 0 2px 12px; margin:-2px 0 12px; }
   .pd-modal .pd-onde .dica{ margin:0 0 8px; }
-  .pd-modal .pd-onde .check{ align-items:flex-start; font-size:12.5px; margin-bottom:4px; }
-  .pd-modal .pd-onde .check input{ margin-top:3px; }
-  .pd-modal .pd-onde .check[hidden]{ display:none; }
+  .pd-modal .pd-onde-acoes{ margin:0 0 8px; }
+  .pd-modal .pd-onde-acoes .pd-btn.primary{ background:var(--accent); border-color:var(--accent); color:#1a1206; font-weight:600; }
+  .pd-modal .pd-onde [hidden]{ display:none !important; }
+  .pd-modal .pd-onde-erro:empty{ display:none; }
   .pd-modal .check{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); margin-bottom:12px; }
   .pd-modal .acoes{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
   .pd-modal .acoes .pd-btn.primary{ background:var(--accent); border-color:var(--accent); color:#1a1206; font-weight:600; }
@@ -2794,7 +2795,9 @@ async function edCaminhoAutomatico(handle){
       const partes = await rootHandle.resolve(handle);
       if (partes){
         const base = (edPrefs().basesRaiz || {})[rootHandle.name];
-        return base ? { caminho: edJuntarCaminho(base, partes) } : { faltaRaiz: partes };
+        if (base) return { caminho: edJuntarCaminho(base, partes) };
+        const viaPrincipal = await edCaminhoPorBases(handle); // a pasta principal (ex.: SVN) já contém a documentação
+        return viaPrincipal ? { caminho: viaPrincipal } : { faltaRaiz: partes };
       }
     } catch(e) { /* segue para as pastas lembradas */ }
   }
@@ -2809,33 +2812,72 @@ function edCaminhoParaFileUrl(caminho){
   return "file:///" + cod(p);
 }
 
-/** Campo de caminho com botão "Procurar…" (+ área para informar a pasta, quando preciso). */
+/** Caminho de uma pasta escolhida no seletor, deduzido sem perguntar nada:
+ *  quando ela contém (ou está dentro de) uma pasta cujo caminho já é conhecido
+ *  — a pasta de documentação conectada ou uma pasta principal já configurada. */
+async function edDerivarCaminhoPasta(dir){
+  const conhecidas = [];
+  const raizCam = rootHandle ? (edPrefs().basesRaiz || {})[rootHandle.name] : null;
+  if (raizCam) conhecidas.push({ handle: rootHandle, caminho: raizCam });
+  for (const b of await edCarregarBases()) conhecidas.push(b);
+  const minus = (a) => a.map(x => x.toLowerCase()).join("/");
+  for (const k of conhecidas){
+    try { // a pasta escolhida está DENTRO da conhecida
+      const p = await k.handle.resolve(dir);
+      if (p) return p.length ? edJuntarCaminho(k.caminho, p) : k.caminho.replace(/[\\/]+$/, "");
+    } catch(e) { /* tenta o outro sentido */ }
+    try { // a pasta escolhida CONTÉM a conhecida: corta o final do caminho conhecido
+      const p = await dir.resolve(k.handle);
+      if (p && p.length){
+        const cam = k.caminho.replace(/[\\/]+$/, "");
+        const segs = cam.split(/[\\/]/);
+        const corte = segs.length - p.length;
+        if (corte > 0 && minus(segs.slice(corte)) === minus(p)) return segs.slice(0, corte).join(cam.includes("\\") ? "\\" : "/");
+      }
+    } catch(e) { /* segue */ }
+  }
+  return null;
+}
+
+/** Campo de caminho com botão "Procurar…" (+ configuração única, quando preciso). */
 function edHtmlEscolher(id, rotulo, placeholder, valor){
   return '<label class="campo">' + edEsc(rotulo) +
       '<span class="pd-linha-arq"><input type="text" class="mono" id="' + id + '" value="' + edEsc(valor || "") + '" placeholder="' + edEsc(placeholder) + '">' +
       '<button type="button" class="pd-btn" data-procurar>Procurar…</button></span></label>' +
     '<div class="pd-onde" hidden>' +
       '<p class="dica pd-onde-txt"></p>' +
-      '<label class="campo"><span class="pd-onde-rot"></span><input type="text" class="mono pd-onde-pasta"></label>' +
-      '<label class="check pd-onde-lembrar-l"><input type="checkbox" class="pd-onde-lembrar" checked>' +
-        "<span>Lembrar esta pasta: arquivos dentro dela e das subpastas terão o caminho preenchido sozinho (o navegador vai pedir para confirmar a pasta)</span></label>" +
+      '<p class="pd-onde-acoes"><button type="button" class="pd-btn primary" data-pasta-principal>Escolher pasta principal…</button></p>' +
+      '<label class="campo pd-onde-campo"><span class="pd-onde-rot"></span><input type="text" class="mono pd-onde-pasta"></label>' +
+      '<p class="dica pd-onde-erro" style="color:var(--danger)"></p>' +
     "</div>";
 }
 
-/** Liga o "Procurar…" de um modal. Devolve { validar(), concluir() } para o OK do modal. */
+/** Liga o "Procurar…" de um modal. Devolve { validar(), concluir() } para o OK do modal.
+ *  Fluxo: escolheu o arquivo -> se o caminho é conhecido, preenche na hora. Se não,
+ *  pede UMA vez a "pasta principal" (ex.: a pasta do SVN) pelo seletor de pastas;
+ *  o caminho dela é deduzido da pasta de documentação quando possível, ou digitado
+ *  uma única vez. Daí em diante, tudo dentro dela é preenchido sozinho. */
 function edLigarEscolher(m, campoId, opcoes){
   const campo = m.querySelector("#" + campoId);
   const onde = m.querySelector(".pd-onde");
+  const txt = onde.querySelector(".pd-onde-txt");
+  const acoes = onde.querySelector(".pd-onde-acoes");
+  const caixa = onde.querySelector(".pd-onde-campo");
   const pasta = onde.querySelector(".pd-onde-pasta");
-  const lembrarL = onde.querySelector(".pd-onde-lembrar-l");
-  const st = { handle: null, modo: null, partes: null, caminho: null };
+  const erro = onde.querySelector(".pd-onde-erro");
+  // modo: null | "raiz" (falta o caminho da pasta conectada) | "principal" (falta escolher a pasta principal) | "digitar" (escolheu, falta o caminho dela)
+  const st = { handle: null, modo: null, partes: null, dir: null, caminho: null };
 
   const limparPasta = (v) => v.trim().replace(/^"|"$/g, "").replace(/[\\/]+$/, "");
+  const mostrar = (o) => { acoes.hidden = !o.acoes; caixa.hidden = !o.caixa; erro.textContent = ""; onde.hidden = false; };
+  const preencher = (caminho) => {
+    st.caminho = caminho;
+    campo.value = caminho ? opcoes.formatar(caminho) : "";
+  };
   const atualizar = () => {
-    if (!st.handle || !st.modo) return;
     const v = limparPasta(pasta.value);
-    st.caminho = v ? edJuntarCaminho(v, st.modo === "raiz" ? st.partes : [st.handle.name]) : null;
-    campo.value = st.caminho ? opcoes.formatar(st.caminho) : "";
+    if (st.modo === "raiz") preencher(v ? edJuntarCaminho(v, st.partes) : null);
+    else if (st.modo === "digitar") preencher(v ? (st.partes.length ? edJuntarCaminho(v, st.partes) : v) : null);
   };
   pasta.addEventListener("input", atualizar);
   // Digitou no campo principal: vale o que foi digitado, esquece o arquivo escolhido.
@@ -2852,40 +2894,77 @@ function edLigarEscolher(m, campoId, opcoes){
       if (!e || e.name !== "AbortError") edToast("Não foi possível escolher o arquivo: " + (e && e.message ? e.message : e), true);
       return;
     }
-    st.handle = h; st.modo = null; st.partes = null; st.caminho = null;
+    st.handle = h; st.modo = null; st.partes = null; st.dir = null; st.caminho = null;
     onde.hidden = true;
 
     const auto = await edCaminhoAutomatico(h);
-    if (auto && auto.caminho){
-      st.caminho = auto.caminho;
-      campo.value = opcoes.formatar(auto.caminho);
+    if (auto && auto.caminho){ preencher(auto.caminho); campo.focus(); return; }
+
+    if (auto && auto.faltaRaiz){
+      st.modo = "raiz"; st.partes = auto.faltaRaiz;
+      txt.innerHTML = "<b>" + edEsc(h.name) + "</b> está na pasta de documentação <b>" + edEsc(rootHandle.name) +
+        "</b>. O navegador não revela caminhos do disco, então informe o caminho dessa pasta <b>uma única vez</b>; daqui pra frente é automático.";
+      caixa.querySelector(".pd-onde-rot").textContent = "Caminho completo da pasta " + rootHandle.name;
+      pasta.placeholder = "Ex.: D:\\SVN\\trunk\\" + rootHandle.name;
+      pasta.value = "";
+      mostrar({ caixa: true });
+      preencher(null);
+      pasta.focus();
+      return;
+    }
+
+    st.modo = "principal";
+    txt.innerHTML = "O navegador não revela caminhos do disco. Escolha <b>uma única vez</b> a pasta principal onde ficam seus arquivos " +
+      "(de preferência a pasta do SVN, que contém os fontes e a documentação). Depois disso, qualquer arquivo dentro dela tem o caminho preenchido sozinho.";
+    campo.value = h.name;
+    mostrar({ acoes: true });
+    acoes.querySelector("button").focus();
+  });
+
+  m.querySelector("[data-pasta-principal]").addEventListener("click", async () => {
+    if (!st.handle || typeof window.showDirectoryPicker !== "function") return;
+    let dir;
+    try { dir = await window.showDirectoryPicker({ id: "pd-pasta-principal", startIn: st.handle, mode: "read" }); }
+    catch(e){
+      if (!e || e.name !== "AbortError") erro.textContent = "Não foi possível usar essa pasta: " + (e && e.message ? e.message : e) + ". Tente uma pasta acima dela, como a do SVN.";
+      return;
+    }
+    let partes = null;
+    try { partes = await dir.resolve(st.handle); } catch(e) { partes = null; }
+    if (!partes){ erro.textContent = "O arquivo " + st.handle.name + " não está dentro da pasta " + dir.name + ". Escolha uma pasta que contenha o arquivo."; return; }
+    st.dir = dir; st.partes = partes;
+
+    const caminhoDir = await edDerivarCaminhoPasta(dir);
+    if (caminhoDir){
+      await edSalvarBase(dir, caminhoDir);
+      st.modo = null;
+      onde.hidden = true;
+      preencher(edJuntarCaminho(caminhoDir, partes));
+      edToast("Pasta principal configurada: " + caminhoDir);
       campo.focus();
       return;
     }
-    if (auto && auto.faltaRaiz){
-      st.modo = "raiz"; st.partes = auto.faltaRaiz;
-      onde.querySelector(".pd-onde-txt").innerHTML = "O navegador não informa caminhos do disco. <b>" + edEsc(h.name) + "</b> está dentro da pasta conectada <b>" +
-        edEsc(rootHandle.name) + "</b>: informe o caminho dessa pasta uma vez e o resto é completado sozinho, agora e nas próximas vezes.";
-      onde.querySelector(".pd-onde-rot").textContent = "Caminho completo da pasta " + rootHandle.name;
-      pasta.placeholder = "Ex.: D:\\SVN\\trunk\\" + rootHandle.name;
-      pasta.value = "";
-      lembrarL.hidden = true;
-    } else {
-      st.modo = "pasta";
-      onde.querySelector(".pd-onde-txt").innerHTML = "O navegador não informa caminhos do disco. Informe a pasta onde está <b>" + edEsc(h.name) + "</b> (sem o nome do arquivo).";
-      onde.querySelector(".pd-onde-rot").textContent = "Pasta do arquivo";
-      pasta.placeholder = "Ex.: D:\\SVN\\trunk\\Docs\\imagens";
-      pasta.value = edPrefs().ultimaPastaArquivo || "";
-      lembrarL.hidden = false;
-    }
-    onde.hidden = false;
-    atualizar();
-    pasta.focus(); pasta.select();
+    st.modo = "digitar";
+    txt.innerHTML = "Falta só o caminho da pasta <b>" + edEsc(dir.name) + "</b> no disco (informado uma única vez).";
+    caixa.querySelector(".pd-onde-rot").textContent = "Caminho completo da pasta " + dir.name;
+    pasta.placeholder = "Ex.: D:\\SVN\\" + dir.name;
+    pasta.value = "";
+    mostrar({ caixa: true });
+    preencher(null);
+    pasta.focus();
   });
 
   return {
     validar(){
-      if (st.modo && !limparPasta(pasta.value)){ pasta.focus(); return false; }
+      if (st.modo === "principal"){ erro.textContent = "Escolha a pasta principal (só desta vez) ou digite o caminho no campo acima."; return false; }
+      if (st.modo === "raiz" || st.modo === "digitar"){
+        const v = limparPasta(pasta.value);
+        if (!v){ pasta.focus(); return false; }
+        if (st.modo === "digitar" && v.split(/[\\/]/).pop().toLowerCase() !== st.dir.name.toLowerCase()){
+          erro.textContent = "O caminho precisa terminar na pasta " + st.dir.name + ".";
+          pasta.focus(); return false;
+        }
+      }
       return true;
     },
     concluir(){
@@ -2894,35 +2973,12 @@ function edLigarEscolher(m, campoId, opcoes){
         const bases = edPrefs().basesRaiz || {};
         bases[rootHandle.name] = v;
         edSalvarPrefs({ basesRaiz: bases });
-      } else if (st.modo === "pasta" && v){
-        edSalvarPrefs({ ultimaPastaArquivo: v });
-        if (onde.querySelector(".pd-onde-lembrar").checked) edLembrarPasta(st.handle, v); // dentro do clique em OK: pode abrir o seletor
+      } else if (st.modo === "digitar" && v && st.dir){
+        edSalvarBase(st.dir, v);
       }
       if (st.handle && st.caminho) edArquivosEscolhidos.set(edNormCaminho(st.caminho), st.handle);
     }
   };
-}
-
-/** Confirma a pasta no seletor do navegador (já aberto na pasta do arquivo) e a lembra com o caminho informado. */
-async function edLembrarPasta(arquivo, pastaDoArquivo){
-  if (typeof window.showDirectoryPicker !== "function") return;
-  try {
-    const dir = await window.showDirectoryPicker({ id: "pd-pasta-lembrada", startIn: arquivo, mode: "read" });
-    const partes = await dir.resolve(arquivo);
-    if (!partes){ edToast("A pasta escolhida não contém " + arquivo.name + ". Nada foi lembrado.", true); return; }
-    const subpastas = partes.slice(0, -1).map(x => x.toLowerCase());
-    const segs = pastaDoArquivo.split(/[\\/]/);
-    const corte = segs.length - subpastas.length;
-    const confere = corte > 0 &&
-      segs.slice(corte).map(x => x.toLowerCase()).join("/") === subpastas.join("/") &&
-      (segs[corte - 1] || "").toLowerCase() === dir.name.toLowerCase();
-    if (!confere){ edToast("A pasta escolhida (" + dir.name + ") não bate com o caminho informado. Nada foi lembrado.", true); return; }
-    const base = segs.slice(0, corte).join(pastaDoArquivo.includes("\\") ? "\\" : "/");
-    await edSalvarBase(dir, base);
-    edToast("Pasta lembrada: " + base);
-  } catch(e){
-    if (!e || e.name !== "AbortError") edToast("Não foi possível lembrar a pasta: " + (e && e.message ? e.message : e), true);
-  }
 }
 
 /* ---------------------------- Caminho completo para o @include ----------------------------
@@ -2967,6 +3023,10 @@ async function edCaminhoCompleto(perguntar, forcarPergunta){
   if (partes){
     const bases = prefs.basesRaiz || {};
     let base = bases[rootHandle.name];
+    if (!base && !forcarPergunta){
+      const viaPrincipal = await edCaminhoPorBases(ed.handle);
+      if (viaPrincipal) return viaPrincipal;
+    }
     if (!base || forcarPergunta){
       if (!perguntar) return null;
       base = await edPerguntarPasta("Onde fica a pasta conectada?",
